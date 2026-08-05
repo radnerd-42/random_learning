@@ -1,0 +1,1242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Leaded Glass Designer</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; height: 100vh; background: #1a1a1a; color: #fff; overflow: hidden; position: relative; }
+    #sidebar { width: 300px; background: #252526; padding: 15px; display: flex; flex-direction: column; gap: 12px; border-right: 1px solid #3c3c3c; user-select: none; overflow-y: auto; z-index: 5; }
+    
+    .sidebar-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #3c3c3c; padding-bottom: 6px; }
+    .sidebar-header h2 { font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px; color: #007acc; border-bottom: none; padding-bottom: 0; }
+
+    .section { display: flex; flex-direction: column; gap: 6px; }
+    label { font-size: 0.85rem; color: #cccccc; display: flex; justify-content: space-between; align-items: center; }
+    button, select, input[type="text"], input[type="range"] { background: #333333; color: #fff; border: 1px solid #454545; padding: 7px 10px; border-radius: 4px; font-size: 0.85rem; transition: all 0.2s; width: 100%; }
+    input[type="text"]:focus { outline: none; border-color: #007acc; background: #2a2a2a; }
+    button { cursor: pointer; }
+    button:hover { background: #444; border-color: #007acc; }
+    button.active { background: #007acc; border-color: #007acc; font-weight: bold; }
+    .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    
+    .snap-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px 8px;
+      background: #1e1e1e;
+      padding: 8px;
+      border-radius: 4px;
+      border: 1px solid #333;
+    }
+    .snap-grid label {
+      font-size: 0.78rem;
+      color: #bbbbbb;
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .snap-grid input[type="checkbox"] {
+      cursor: pointer;
+      accent-color: #007acc;
+      width: 13px;
+      height: 13px;
+      margin: 0;
+    }
+    .snap-grid label.full-width {
+      grid-column: span 2;
+    }
+
+    #canvas-container { flex: 1; position: relative; background: #111111; display: flex; align-items: center; justify-content: center; overflow: hidden; padding: 20px; }
+    canvas { background: #1e1e1e; box-shadow: 0 0 15px rgba(0,0,0,0.8); cursor: crosshair; }
+    #status-bar { position: absolute; bottom: 10px; left: 10px; background: rgba(0,0,0,0.85); padding: 6px 12px; border-radius: 4px; font-family: monospace; font-size: 0.8rem; pointer-events: none; border: 1px solid #444; z-index: 10; }
+
+    /* Floating Help Button in Bottom Right Corner */
+    .btn-floating-help {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 999;
+      width: auto;
+      background: #007acc;
+      color: #fff;
+      font-weight: bold;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 50px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.2s, transform 0.2s;
+    }
+    .btn-floating-help:hover {
+      background: #005999;
+      transform: translateY(-2px);
+    }
+
+    /* Modal Popup Styling */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(3px);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.open {
+      display: flex;
+    }
+    .modal-content {
+      background: #252526;
+      border: 1px solid #454545;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 680px;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      position: relative;
+    }
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid #3c3c3c;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-header h3 {
+      font-size: 1.2rem;
+      color: #007acc;
+    }
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      color: #aaa;
+      cursor: pointer;
+      width: auto;
+      padding: 0 5px;
+      line-height: 1;
+    }
+    .close-btn:hover {
+      color: #fff;
+      background: none;
+    }
+    .modal-body {
+      padding: 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      font-size: 0.9rem;
+      line-height: 1.5;
+      color: #dddddd;
+    }
+    .guide-section {
+      border-bottom: 1px solid #333;
+      padding-bottom: 12px;
+    }
+    .guide-section:last-child {
+      border-bottom: none;
+    }
+    .guide-section h4 {
+      color: #007acc;
+      margin-bottom: 6px;
+      font-size: 1rem;
+    }
+    .guide-section ul {
+      list-style-type: disc;
+      padding-left: 20px;
+    }
+    .guide-section li {
+      margin-bottom: 4px;
+    }
+    kbd {
+      background: #333;
+      border: 1px solid #555;
+      border-radius: 3px;
+      padding: 2px 6px;
+      font-family: monospace;
+      font-size: 0.8rem;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="sidebar">
+    <div class="sidebar-header">
+      <h2>Leaded Glass Designer</h2>
+    </div>
+
+    <div class="section">
+      <label for="project-name">Pattern Name</label>
+      <input type="text" id="project-name" value="Leaded-Glass-Pattern" placeholder="Enter pattern name..." />
+    </div>
+
+    <div class="section">
+      <label>Units Mode</label>
+      <select id="unit-select">
+        <option value="in" selected>Inches (in)</option>
+        <option value="mm">Millimeters (mm)</option>
+      </select>
+    </div>
+
+    <div class="section">
+      <label>Paper Setup</label>
+      <select id="paper-select">
+        <optgroup label="US Standard">
+          <option value="letter" selected>US Letter (8.5" × 11")</option>
+          <option value="legal">US Legal (8.5" × 14")</option>
+          <option value="tabloid">US Tabloid (11" × 17")</option>
+        </optgroup>
+        <optgroup label="ISO Standard">
+          <option value="a4">A4 (210 × 297 mm)</option>
+          <option value="a3">A3 (297 × 420 mm)</option>
+          <option value="a2">A2 (420 × 594 mm)</option>
+        </optgroup>
+      </select>
+      <select id="paper-orient">
+        <option value="portrait" selected>Portrait</option>
+        <option value="landscape">Landscape</option>
+      </select>
+    </div>
+    
+    <div class="section">
+      <label>Drawing Tool</label>
+      <div class="btn-grid">
+        <button class="tool-btn active" data-tool="line">Line</button>
+        <button class="tool-btn" data-tool="arc">3P Arc</button>
+        <button class="tool-btn" data-tool="circle">Circle</button>
+        <button class="tool-btn" data-tool="ogee">Single S-Curve</button>
+        <button class="tool-btn" data-tool="rect">Rectangle</button>
+        <button class="tool-btn" data-tool="trim" style="background:#d9534f; border-color:#d9534f;">Trim ✂️</button>
+        <button class="tool-btn" data-tool="erase" style="background:#c9302c; border-color:#c9302c; grid-column: span 2;">Eraser 🧹</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <label>Snapping</label>
+      <div class="snap-grid">
+        <label><input type="checkbox" id="snap-grid" checked /><span>Grid</span></label>
+        <label><input type="checkbox" id="snap-end" checked /><span>Endpoints</span></label>
+        <label><input type="checkbox" id="snap-mid" checked /><span>Midpoints</span></label>
+        <label><input type="checkbox" id="snap-center" checked /><span>Center</span></label>
+        <label class="full-width"><input type="checkbox" id="snap-perp" checked /><span>Snap Perpendicular</span></label>
+      </div>
+    </div>
+
+    <div class="section">
+      <label>Grid Size (<span id="unit-label">in</span>): <span id="grid-val">0.25</span></label>
+      <input type="range" id="grid-size" min="0.1" max="2.0" step="0.05" value="0.25" />
+    </div>
+
+    <div class="section">
+      <label>View Controls</label>
+      <button id="btn-reset-view">Reset Zoom & Pan</button>
+    </div>
+
+    <div class="section">
+      <label>History</label>
+      <div class="btn-grid">
+        <button id="btn-undo">Undo (Ctrl+Z)</button>
+        <button id="btn-redo">Redo (Ctrl+Y)</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <label>File Operations</label>
+      <button id="btn-clear">Clear Canvas</button>
+      <button id="btn-save">Save Pattern (.gls)</button>
+      <button id="btn-load">Load Pattern</button>
+      <input type="file" id="file-input" style="display:none" accept=".gls,.glass,.json" />
+      <button id="btn-pdf" style="background:#28a745; border-color:#28a745;">Export PDF (1:1)</button>
+    </div>
+  </div>
+
+  <div id="canvas-container">
+    <canvas id="draftCanvas"></canvas>
+    <div id="status-bar">Tool: Line | Pos: X:0 Y:0 | Zoom: 100% | Snap: None</div>
+  </div>
+
+  <!-- Bottom-Right Floating Help Button -->
+  <button class="btn-floating-help" id="btn-open-help">? Help</button>
+
+  <!-- Help Modal Popup -->
+  <div class="modal-overlay" id="help-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>User Guide & Instructions</h3>
+        <button class="close-btn" id="btn-close-help">&times;</button>
+      </div>
+      <div class="modal-body">
+        
+        <div class="guide-section">
+          <h4>🔍 View Controls (Zoom & Pan)</h4>
+          <ul>
+            <li><strong>Cursor-Centered Zoom:</strong> Scroll your mouse wheel up or down to zoom in or out. The view zooms directly toward your mouse pointer position.</li>
+            <li><strong>Panning the Canvas:</strong> Press and hold the <strong>Middle Mouse Wheel</strong> (or hold <kbd>Spacebar</kbd> + Left Click) and drag to move across the workspace.</li>
+            <li><strong>Reset View:</strong> Click <strong>"Reset Zoom & Pan"</strong> in the sidebar to return to default scale (100%).</li>
+          </ul>
+        </div>
+
+        <div class="guide-section">
+          <h4>✏️ Drawing Tools</h4>
+          <ul>
+            <li><strong>Line:</strong> Click once for start point, click again to set end point. Shows live distance and angle readouts.</li>
+            <li><strong>3P Arc:</strong> Click 3 times: Start Point → End Point → Control Curvature Point.</li>
+            <li><strong>Circle:</strong> Click once for center point, drag and click again to set radius.</li>
+            <li><strong>Single S-Curve:</strong> Click start point and end point to draw a single fluid, smooth S-curve line (ideal for organic glass borders).</li>
+            <li><strong>Rectangle:</strong> Click start corner, click opposite corner.</li>
+            <li><strong>Trim ✂️:</strong> Click any line segment bounded by intersections to cut it away cleanly.</li>
+            <li><strong>Eraser 🧹:</strong> Click any line or shape to erase the entire object. Hovering highlights target shapes in red.</li>
+          </ul>
+        </div>
+
+        <div class="guide-section">
+          <h4>🧲 Snapping Features</h4>
+          <ul>
+            <li><strong>Grid Snap:</strong> Magnetically snaps cursor to background grid intersections.</li>
+            <li><strong>Endpoints:</strong> Snaps precisely to start/end points of existing shapes.</li>
+            <li><strong>Midpoints:</strong> Snaps directly to center points of straight line segments.</li>
+            <li><strong>Center Snap:</strong> Snaps to center points of drawn circles.</li>
+            <li><strong>Snap Perpendicular:</strong> When drawing a line, snaps to form an exact 90° angle with target lines.</li>
+          </ul>
+        </div>
+
+        <div class="guide-section">
+          <h4>📄 Paper & Pattern Setup</h4>
+          <ul>
+            <li><strong>Units Mode:</strong> Switch seamlessly between <em>Inches (in)</em> and <em>Millimeters (mm)</em>.</li>
+            <li><strong>Paper Setup:</strong> Standard paper sizes (US Letter, Legal, Tabloid, ISO A4, A3, A2) in Portrait or Landscape.</li>
+            <li><strong>Grid Size:</strong> Adjust the slider to increase or decrease grid spacing dynamically.</li>
+          </ul>
+        </div>
+
+        <div class="guide-section">
+          <h4>💾 Saving & PDF Export</h4>
+          <ul>
+            <li><strong>Save Pattern (.gls):</strong> Downloads your current draft as a reusable project file.</li>
+            <li><strong>Load Pattern:</strong> Upload any saved <code>.gls</code> project file to resume drafting.</li>
+            <li><strong>Export PDF (1:1):</strong> Generates a full 1:1 true-scale printable template suitable for cutting glass patterns directly.</li>
+          </ul>
+        </div>
+
+        <div class="guide-section">
+          <h4>⌨️ Keyboard Shortcuts</h4>
+          <ul>
+            <li><kbd>Ctrl</kbd> + <kbd>Z</kbd> — Undo last action</li>
+            <li><kbd>Ctrl</kbd> + <kbd>Y</kbd> — Redo action</li>
+            <li><kbd>Esc</kbd> — Cancel active drawing line/point buffer (or close Help guide)</li>
+            <li><kbd>Spacebar</kbd> (Hold) + Drag — Pan across canvas</li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const DPI = 96;
+    const MM_PER_INCH = 25.4;
+
+    const PAPER_SIZES = {
+      letter:  { name: 'Letter',  inW: 8.5,  inH: 11   },
+      legal:   { name: 'Legal',   inW: 8.5,  inH: 14   },
+      tabloid: { name: 'Tabloid', inW: 11,   inH: 17   },
+      a4:      { name: 'A4',      inW: 8.27, inH: 11.69},
+      a3:      { name: 'A3',      inW: 11.69,inH: 16.54},
+      a2:      { name: 'A2',      inW: 16.54,inH: 23.39}
+    };
+
+    const canvas = document.getElementById('draftCanvas');
+    const ctx = canvas.getContext('2d');
+    const statusBar = document.getElementById('status-bar');
+
+    let activeUnit = 'in';
+    let currentTool = 'line';
+    let gridSizeVal = 0.25;
+    let elements = [];
+    let history = [[]];
+    let historyIndex = 0;
+
+    let pointsBuffer = [];
+    let mousePos = { x: 0, y: 0 };
+    let activeSnap = null;
+    let hoveredElementIdx = -1;
+
+    let activePaperKey = 'letter';
+    let activeOrientation = 'portrait';
+
+    // Transform State (Zoom & Pan)
+    let scale = 1.0;
+    let panX = 0;
+    let panY = 0;
+    let isPanning = false;
+    let panStart = { x: 0, y: 0 };
+    let isSpacePressed = false;
+
+    const snaps = { grid: true, end: true, mid: true, perp: true, center: true };
+
+    // Help Modal Logic
+    const helpModal = document.getElementById('help-modal');
+    const openHelpBtn = document.getElementById('btn-open-help');
+    const closeHelpBtn = document.getElementById('btn-close-help');
+
+    function openHelp() { helpModal.classList.add('open'); }
+    function closeHelp() { helpModal.classList.remove('open'); }
+
+    openHelpBtn.addEventListener('click', openHelp);
+    closeHelpBtn.addEventListener('click', closeHelp);
+    helpModal.addEventListener('click', (e) => {
+      if (e.target === helpModal) closeHelp();
+    });
+
+    function getSanitizedProjectName() {
+      const nameInput = document.getElementById('project-name').value.trim();
+      const sanitized = nameInput.replace(/[/\\?%*:|"<>]/g, '-').replace(/\s+/g, '-');
+      return sanitized || 'Leaded-Glass-Pattern';
+    }
+
+    function pxToUnit(px) {
+      if (activeUnit === 'mm') return (px / DPI) * MM_PER_INCH;
+      return px / DPI;
+    }
+
+    function unitToPx(val) {
+      if (activeUnit === 'mm') return (val / MM_PER_INCH) * DPI;
+      return val * DPI;
+    }
+
+    function formatUnit(val) {
+      return `${val.toFixed(2)} ${activeUnit}`;
+    }
+
+    function getPaperDimensions() {
+      const base = PAPER_SIZES[activePaperKey];
+      const inW = activeOrientation === 'landscape' ? base.inH : base.inW;
+      const inH = activeOrientation === 'landscape' ? base.inW : base.inH;
+      return { pxW: inW * DPI, pxH: inH * DPI, inW, inH };
+    }
+
+    function resetView() {
+      scale = 1.0;
+      panX = 0;
+      panY = 0;
+      draw();
+    }
+
+    function updateCanvasSize() {
+      const p = getPaperDimensions();
+      canvas.width = p.pxW;
+      canvas.height = p.pxH;
+      draw();
+    }
+
+    function updateUnitControls() {
+      const unitLabel = document.getElementById('unit-label');
+      const gridSlider = document.getElementById('grid-size');
+      const gridValLabel = document.getElementById('grid-val');
+
+      unitLabel.innerText = activeUnit;
+      if (activeUnit === 'mm') {
+        gridSlider.min = "2";
+        gridSlider.max = "50";
+        gridSlider.step = "1";
+        gridSizeVal = 5;
+      } else {
+        gridSlider.min = "0.1";
+        gridSlider.max = "2.0";
+        gridSlider.step = "0.05";
+        gridSizeVal = 0.25;
+      }
+      gridSlider.value = gridSizeVal;
+      gridValLabel.innerText = gridSizeVal;
+      draw();
+    }
+
+    function recordState() {
+      history = history.slice(0, historyIndex + 1);
+      history.push(JSON.parse(JSON.stringify(elements)));
+      historyIndex++;
+    }
+
+    function undo() {
+      if (historyIndex > 0) {
+        historyIndex--;
+        elements = JSON.parse(JSON.stringify(history[historyIndex]));
+        pointsBuffer = [];
+        draw();
+      }
+    }
+
+    function redo() {
+      if (historyIndex < history.length - 1) {
+        historyIndex++;
+        elements = JSON.parse(JSON.stringify(history[historyIndex]));
+        pointsBuffer = [];
+        draw();
+      }
+    }
+
+    const dist = (p1, p2) => Math.hypot(p2.x - p1.x, p2.y - p1.y);
+    const mid = (p1, p2) => ({ x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 });
+    const angleDeg = (p1, p2) => (Math.atan2(p2.y - p1.y, p2.x - p1.x) * 180 / Math.PI + 360) % 360;
+
+    function distToSegment(p, a, b) {
+      const l2 = (b.x - a.x)**2 + (b.y - a.y)**2;
+      if (l2 === 0) return dist(p, a);
+      let t = ((p.x - a.x) * (b.x - a.x) + (p.y - a.y) * (b.y - a.y)) / l2;
+      t = Math.max(0, Math.min(1, t));
+      return dist(p, { x: a.x + t * (b.x - a.x), y: a.y + t * (b.y - a.y) });
+    }
+
+    // Single S-Curve Bezier Control Point Calculator
+    function getSingleSCurveControlPoints(p1, p2) {
+      const dx = p2.x - p1.x;
+      const dy = p2.y - p1.y;
+      
+      // Calculate perpendicular offset vector for smooth S-shape
+      const perpX = -dy * 0.35;
+      const perpY = dx * 0.35;
+
+      const cp1 = {
+        x: p1.x + dx * 0.25 + perpX,
+        y: p1.y + dy * 0.25 + perpY
+      };
+      
+      const cp2 = {
+        x: p1.x + dx * 0.75 - perpX,
+        y: p1.y + dy * 0.75 - perpY
+      };
+
+      return { cp1, cp2 };
+    }
+
+    function sampleElement(el, numSamples = 100) {
+      const pts = [];
+      if (el.type === 'line') {
+        return [ { ...el.p1, t: 0 }, { ...el.p2, t: 1 } ];
+      } else if (el.type === 'circle') {
+        const startAng = el.startAngle ?? 0;
+        const endAng = el.endAngle ?? (Math.PI * 2);
+        for (let i = 0; i <= numSamples; i++) {
+          const t = i / numSamples;
+          const a = startAng + t * (endAng - startAng);
+          pts.push({ x: el.center.x + el.r * Math.cos(a), y: el.center.y + el.r * Math.sin(a), t: t, angle: a });
+        }
+      } else if (el.type === 'arc') {
+        for (let i = 0; i <= numSamples; i++) {
+          const t = i / numSamples;
+          pts.push({
+            x: (1 - t)**2 * el.p1.x + 2 * (1 - t) * t * el.ctrl.x + t**2 * el.p2.x,
+            y: (1 - t)**2 * el.p1.y + 2 * (1 - t) * t * el.ctrl.y + t**2 * el.p2.y,
+            t: t
+          });
+        }
+      } else if (el.type === 'ogee') {
+        const { cp1, cp2 } = getSingleSCurveControlPoints(el.p1, el.p2);
+        for (let i = 0; i <= numSamples; i++) {
+          const t = i / numSamples;
+          const x = (1 - t)**3 * el.p1.x + 3 * (1 - t)**2 * t * cp1.x + 3 * (1 - t) * t**2 * cp2.x + t**3 * el.p2.x;
+          const y = (1 - t)**3 * el.p1.y + 3 * (1 - t)**2 * t * cp1.y + 3 * (1 - t) * t**2 * cp2.y + t**3 * el.p2.y;
+          pts.push({ x, y, t });
+        }
+      }
+      return pts;
+    }
+
+    function getLineIntersection(p1, p2, p3, p4) {
+      const denom = (p4.y - p3.y) * (p2.x - p1.x) - (p4.x - p3.x) * (p2.y - p1.y);
+      if (denom === 0) return null;
+      const ua = ((p4.x - p3.x) * (p1.y - p3.y) - (p4.y - p3.y) * (p1.x - p3.x)) / denom;
+      const ub = ((p2.x - p1.x) * (p1.y - p3.y) - (p2.y - p1.y) * (p1.x - p3.x)) / denom;
+      if (ua >= 0 && ua <= 1 && ub >= 0 && ub <= 1) {
+        return { x: p1.x + ua * (p2.x - p1.x), y: p1.y + ua * (p2.y - p1.y), ua };
+      }
+      return null;
+    }
+
+    function findShapeIntersections(targetEl, otherEl) {
+      const targetPoly = sampleElement(targetEl, 120);
+      const otherPoly = sampleElement(otherEl, 120);
+      const hits = [];
+
+      for (let i = 0; i < targetPoly.length - 1; i++) {
+        for (let j = 0; j < otherPoly.length - 1; j++) {
+          const hit = getLineIntersection(targetPoly[i], targetPoly[i+1], otherPoly[j], otherPoly[j+1]);
+          if (hit) {
+            const segT = targetPoly[i].t + hit.ua * (targetPoly[i+1].t - targetPoly[i].t);
+            hits.push({ x: hit.x, y: hit.y, t: segT });
+          }
+        }
+      }
+      return hits;
+    }
+
+    function splitShapeAtParams(el, tParams) {
+      tParams.sort((a, b) => a - b);
+      const cleanParams = [0];
+      tParams.forEach(t => {
+        if (t > 0.001 && t < 0.999 && (t - cleanParams[cleanParams.length - 1]) > 0.001) {
+          cleanParams.push(t);
+        }
+      });
+      cleanParams.push(1);
+
+      const segments = [];
+      for (let i = 0; i < cleanParams.length - 1; i++) {
+        const t1 = cleanParams[i];
+        const t2 = cleanParams[i+1];
+
+        if (el.type === 'circle') {
+          const startAng = el.startAngle ?? 0;
+          const endAng = el.endAngle ?? (Math.PI * 2);
+          segments.push({
+            type: 'circle',
+            center: { ...el.center },
+            r: el.r,
+            startAngle: startAng + t1 * (endAng - startAng),
+            endAngle: startAng + t2 * (endAng - startAng),
+            tSpan: [t1, t2]
+          });
+        } else if (el.type === 'line') {
+          segments.push({
+            type: 'line',
+            p1: { x: el.p1.x + t1 * (el.p2.x - el.p1.x), y: el.p1.y + t1 * (el.p2.y - el.p1.y) },
+            p2: { x: el.p1.x + t2 * (el.p2.x - el.p1.x), y: el.p1.y + t2 * (el.p2.y - el.p1.y) },
+            tSpan: [t1, t2]
+          });
+        } else if (el.type === 'arc') {
+          const pt1 = {
+            x: (1 - t1)**2 * el.p1.x + 2 * (1 - t1) * t1 * el.ctrl.x + t1**2 * el.p2.x,
+            y: (1 - t1)**2 * el.p1.y + 2 * (1 - t1) * t1 * el.ctrl.y + t1**2 * el.p2.y
+          };
+          const pt2 = {
+            x: (1 - t2)**2 * el.p1.x + 2 * (1 - t2) * t2 * el.ctrl.x + t2**2 * el.p2.x,
+            y: (1 - t2)**2 * el.p1.y + 2 * (1 - t2) * t2 * el.ctrl.y + t2**2 * el.p2.y
+          };
+          const tm = (t1 + t2) / 2;
+          const midPt = {
+            x: (1 - tm)**2 * el.p1.x + 2 * (1 - tm) * tm * el.ctrl.x + tm**2 * el.p2.x,
+            y: (1 - tm)**2 * el.p1.y + 2 * (1 - tm) * tm * el.ctrl.y + tm**2 * el.p2.y
+          };
+          const ctrlPt = {
+            x: 2 * midPt.x - 0.5 * pt1.x - 0.5 * pt2.x,
+            y: 2 * midPt.y - 0.5 * pt1.y - 0.5 * pt2.y
+          };
+
+          segments.push({ type: 'arc', p1: pt1, p2: pt2, ctrl: ctrlPt, tSpan: [t1, t2] });
+        } else if (el.type === 'ogee') {
+          const poly = sampleElement(el, 100);
+          const i1 = Math.floor(t1 * 100);
+          const i2 = Math.floor(t2 * 100);
+          segments.push({
+            type: 'line',
+            p1: { x: poly[i1].x, y: poly[i1].y },
+            p2: { x: poly[i2].x, y: poly[i2].y },
+            tSpan: [t1, t2]
+          });
+        }
+      }
+      return segments;
+    }
+
+    function convertRectanglesToLines() {
+      let nextEls = [];
+      elements.forEach(el => {
+        if (el.type === 'rect') {
+          const { p1, p2 } = el;
+          nextEls.push({ type: 'line', p1: { x: p1.x, y: p1.y }, p2: { x: p2.x, y: p1.y } });
+          nextEls.push({ type: 'line', p1: { x: p2.x, y: p1.y }, p2: { x: p2.x, y: p2.y } });
+          nextEls.push({ type: 'line', p1: { x: p2.x, y: p2.y }, p2: { x: p1.x, y: p2.y } });
+          nextEls.push({ type: 'line', p1: { x: p1.x, y: p2.y }, p2: { x: p1.x, y: p1.y } });
+        } else {
+          nextEls.push(el);
+        }
+      });
+      elements = nextEls;
+    }
+
+    function trimAtPoint(pt) {
+      convertRectanglesToLines();
+
+      let targetIdx = -1;
+      let minDist = 15 / scale;
+
+      elements.forEach((el, idx) => {
+        const poly = sampleElement(el, 100);
+        for (let i = 0; i < poly.length - 1; i++) {
+          const d = distToSegment(pt, poly[i], poly[i+1]);
+          if (d < minDist) {
+            minDist = d;
+            targetIdx = idx;
+          }
+        }
+      });
+
+      if (targetIdx === -1) return;
+
+      const targetEl = elements[targetIdx];
+      let intersectionParams = [];
+
+      elements.forEach((other, idx) => {
+        if (idx === targetIdx) return;
+        const hits = findShapeIntersections(targetEl, other);
+        hits.forEach(h => intersectionParams.push(h.t));
+      });
+
+      if (intersectionParams.length === 0) {
+        elements.splice(targetIdx, 1);
+      } else {
+        const splitSegments = splitShapeAtParams(targetEl, intersectionParams);
+        const poly = sampleElement(targetEl, 100);
+        
+        let clickT = 0;
+        let minCDist = Infinity;
+        poly.forEach(p => {
+          const d = dist(pt, p);
+          if (d < minCDist) {
+            minCDist = d;
+            clickT = p.t;
+          }
+        });
+
+        let removeIdx = splitSegments.findIndex(seg => clickT >= seg.tSpan[0] && clickT <= seg.tSpan[1]);
+        if (removeIdx === -1) removeIdx = 0;
+
+        splitSegments.splice(removeIdx, 1);
+        elements.splice(targetIdx, 1, ...splitSegments);
+      }
+
+      recordState();
+      draw();
+    }
+
+    function findHoveredElement(pt) {
+      const threshold = 12 / scale;
+      let targetIdx = -1;
+      let minDist = threshold;
+
+      elements.forEach((el, idx) => {
+        const poly = sampleElement(el, 60);
+        for (let i = 0; i < poly.length - 1; i++) {
+          const d = distToSegment(pt, poly[i], poly[i+1]);
+          if (d < minDist) {
+            minDist = d;
+            targetIdx = idx;
+          }
+        }
+      });
+
+      return targetIdx;
+    }
+
+    function perpPoint(p, a, b) {
+      const l2 = (b.x - a.x)**2 + (b.y - a.y)**2;
+      if (l2 === 0) return a;
+      let t = ((p.x - a.x) * (b.x - a.x) + (p.y - a.y) * (b.y - a.y)) / l2;
+      t = Math.max(0, Math.min(1, t));
+      return { x: a.x + t * (b.x - a.x), y: a.y + t * (b.y - a.y) };
+    }
+
+    function calculateSnap(raw) {
+      if (currentTool === 'trim' || currentTool === 'erase') return raw;
+
+      const threshold = 12 / scale;
+      let closest = null;
+      let minDist = threshold;
+      let snapType = 'None';
+
+      elements.forEach(el => {
+        let targets = [];
+        if (snaps.end) {
+          if (el.type === 'line' || el.type === 'rect') targets.push({ pt: el.p1, type: 'Endpoint' }, { pt: el.p2, type: 'Endpoint' });
+          if (el.type === 'arc' || el.type === 'ogee') targets.push({ pt: el.p1, type: 'Endpoint' }, { pt: el.p2, type: 'Endpoint' });
+        }
+        if (snaps.mid && el.type === 'line') {
+          targets.push({ pt: mid(el.p1, el.p2), type: 'Midpoint' });
+        }
+        if (snaps.center && el.type === 'circle') {
+          targets.push({ pt: el.center, type: 'Center' });
+        }
+
+        targets.forEach(t => {
+          const d = dist(raw, t.pt);
+          if (d < minDist) {
+            minDist = d;
+            closest = t.pt;
+            snapType = t.type;
+          }
+        });
+
+        if (snaps.perp && el.type === 'line' && pointsBuffer.length === 1) {
+          const proj = perpPoint(raw, el.p1, el.p2);
+          const d = dist(raw, proj);
+          if (d < minDist) {
+            minDist = d;
+            closest = proj;
+            snapType = 'Perpendicular';
+          }
+        }
+      });
+
+      if (!closest && snaps.grid) {
+        const gridPx = unitToPx(gridSizeVal);
+        const gx = Math.round(raw.x / gridPx) * gridPx;
+        const gy = Math.round(raw.y / gridPx) * gridPx;
+        if (dist(raw, { x: gx, y: gy }) < threshold) {
+          closest = { x: gx, y: gy };
+          snapType = 'Grid';
+        }
+      }
+
+      activeSnap = snapType;
+      return closest || raw;
+    }
+
+    function drawGrid(targetCtx = ctx) {
+      const gridPx = unitToPx(gridSizeVal);
+      targetCtx.strokeStyle = '#2a2a2a';
+      targetCtx.lineWidth = 1 / scale;
+      for (let x = 0; x < canvas.width; x += gridPx) {
+        targetCtx.beginPath(); targetCtx.moveTo(x, 0); targetCtx.lineTo(x, canvas.height); targetCtx.stroke();
+      }
+      for (let y = 0; y < canvas.height; y += gridPx) {
+        targetCtx.beginPath(); targetCtx.moveTo(0, y); targetCtx.lineTo(canvas.width, y); targetCtx.stroke();
+      }
+
+      targetCtx.strokeStyle = '#007acc';
+      targetCtx.lineWidth = 2 / scale;
+      targetCtx.strokeRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function renderElement(el, isPreview = false, isHighlighted = false, targetCtx = ctx, overrideColor = null) {
+      targetCtx.save();
+      targetCtx.strokeStyle = overrideColor ? overrideColor : (isHighlighted ? '#ff4d4d' : (isPreview ? '#007acc' : '#ffffff'));
+      
+      const baseWidth = isHighlighted ? 8 : (isPreview ? 2 : 6);
+      targetCtx.lineWidth = baseWidth / scale;
+      
+      targetCtx.lineCap = 'round';
+      targetCtx.lineJoin = 'round';
+
+      if (isPreview) targetCtx.setLineDash([6 / scale, 6 / scale]);
+
+      if (el.type === 'line') {
+        targetCtx.beginPath();
+        targetCtx.moveTo(el.p1.x, el.p1.y);
+        targetCtx.lineTo(el.p2.x, el.p2.y);
+        targetCtx.stroke();
+      } else if (el.type === 'rect') {
+        targetCtx.beginPath();
+        targetCtx.rect(el.p1.x, el.p1.y, el.p2.x - el.p1.x, el.p2.y - el.p1.y);
+        targetCtx.stroke();
+      } else if (el.type === 'circle') {
+        targetCtx.beginPath();
+        const startAng = el.startAngle ?? 0;
+        const endAng = el.endAngle ?? (Math.PI * 2);
+        targetCtx.arc(el.center.x, el.center.y, el.r, startAng, endAng);
+        targetCtx.stroke();
+      } else if (el.type === 'arc') {
+        targetCtx.beginPath();
+        targetCtx.moveTo(el.p1.x, el.p1.y);
+        targetCtx.quadraticCurveTo(el.ctrl.x, el.ctrl.y, el.p2.x, el.p2.y);
+        targetCtx.stroke();
+      } else if (el.type === 'ogee') {
+        const { cp1, cp2 } = getSingleSCurveControlPoints(el.p1, el.p2);
+        targetCtx.beginPath();
+        targetCtx.moveTo(el.p1.x, el.p1.y);
+        targetCtx.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, el.p2.x, el.p2.y);
+        targetCtx.stroke();
+      }
+
+      targetCtx.restore();
+    }
+
+    function drawMeasurements(p1, p2, type = 'line') {
+      ctx.save();
+      const fontSize = 12 / scale;
+      ctx.font = `${fontSize}px monospace`;
+      ctx.fillStyle = '#007acc';
+      const pxDist = dist(p1, p2);
+      const realDist = formatUnit(pxToUnit(pxDist));
+      const ang = angleDeg(p1, p2).toFixed(1);
+
+      const offset = 10 / scale;
+      if (type === 'line' || type === 'rect' || type === 'ogee') {
+        const m = mid(p1, p2);
+        ctx.fillText(`${realDist} | ${ang}°`, m.x + offset, m.y - offset);
+      } else if (type === 'circle') {
+        ctx.fillText(`R: ${realDist}`, p1.x + offset, p1.y - offset);
+      }
+      ctx.restore();
+    }
+
+    function drawSnapIndicator(pt, type) {
+      if (!pt || type === 'None') return;
+      ctx.save();
+      ctx.strokeStyle = '#ff9800';
+      ctx.lineWidth = 2 / scale;
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, 6 / scale, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.fillStyle = '#ff9800';
+      ctx.font = `${10 / scale}px sans-serif`;
+      ctx.fillText(type, pt.x + (10 / scale), pt.y + (3 / scale));
+      ctx.restore();
+    }
+
+    function draw() {
+      ctx.save();
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Apply Zoom & Pan Matrix
+      ctx.translate(panX, panY);
+      ctx.scale(scale, scale);
+
+      drawGrid();
+
+      elements.forEach((el, idx) => {
+        const isHovered = (currentTool === 'erase' && idx === hoveredElementIdx);
+        renderElement(el, false, isHovered);
+      });
+
+      const currentSnapPt = calculateSnap(mousePos);
+      if (pointsBuffer.length > 0) {
+        const p1 = pointsBuffer[0];
+        if (currentTool === 'line') {
+          renderElement({ type: 'line', p1, p2: currentSnapPt }, true);
+          drawMeasurements(p1, currentSnapPt, 'line');
+        } else if (currentTool === 'rect') {
+          renderElement({ type: 'rect', p1, p2: currentSnapPt }, true);
+        } else if (currentTool === 'circle') {
+          const r = dist(p1, currentSnapPt);
+          renderElement({ type: 'circle', center: p1, r }, true);
+          drawMeasurements(p1, currentSnapPt, 'circle');
+        } else if (currentTool === 'arc') {
+          if (pointsBuffer.length === 1) renderElement({ type: 'line', p1, p2: currentSnapPt }, true);
+          else if (pointsBuffer.length === 2) renderElement({ type: 'arc', p1: pointsBuffer[0], p2: pointsBuffer[1], ctrl: currentSnapPt }, true);
+        } else if (currentTool === 'ogee') {
+          renderElement({ type: 'ogee', p1, p2: currentSnapPt }, true);
+          drawMeasurements(p1, currentSnapPt, 'ogee');
+        }
+      }
+
+      drawSnapIndicator(currentSnapPt, activeSnap);
+      ctx.restore();
+    }
+
+    function screenToWorld(screenX, screenY) {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = screenX - rect.left;
+      const clientY = screenY - rect.top;
+      return {
+        x: (clientX - panX) / scale,
+        y: (clientY - panY) / scale
+      };
+    }
+
+    // Zooming
+    canvas.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const rect = canvas.getBoundingClientRect();
+      const mouseScreenX = e.clientX - rect.left;
+      const mouseScreenY = e.clientY - rect.top;
+
+      const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
+      const newScale = Math.min(Math.max(scale * zoomFactor, 0.2), 10.0);
+
+      panX = mouseScreenX - (mouseScreenX - panX) * (newScale / scale);
+      panY = mouseScreenY - (mouseScreenY - panY) * (newScale / scale);
+      scale = newScale;
+
+      draw();
+      updateStatusBar();
+    }, { passive: false });
+
+    // Panning & Clicking
+    canvas.addEventListener('mousedown', (e) => {
+      if (e.button === 1 || (e.button === 0 && isSpacePressed)) {
+        isPanning = true;
+        panStart = { x: e.clientX - panX, y: e.clientY - panY };
+        canvas.style.cursor = 'grabbing';
+        e.preventDefault();
+        return;
+      }
+
+      if (e.button !== 0) return;
+
+      const p = calculateSnap(mousePos);
+
+      if (currentTool === 'erase') {
+        const targetIdx = findHoveredElement(mousePos);
+        if (targetIdx !== -1) {
+          elements.splice(targetIdx, 1);
+          hoveredElementIdx = -1;
+          recordState();
+          draw();
+        }
+        return;
+      }
+
+      if (currentTool === 'trim') {
+        trimAtPoint(mousePos);
+        return;
+      }
+
+      if (['line', 'rect', 'circle', 'ogee'].includes(currentTool)) {
+        if (pointsBuffer.length === 0) {
+          pointsBuffer.push(p);
+        } else {
+          const p1 = pointsBuffer[0];
+          if (currentTool === 'line') elements.push({ type: 'line', p1, p2: p });
+          if (currentTool === 'rect') elements.push({ type: 'rect', p1, p2: p });
+          if (currentTool === 'circle') elements.push({ type: 'circle', center: p1, r: dist(p1, p) });
+          if (currentTool === 'ogee') elements.push({ type: 'ogee', p1, p2: p });
+
+          pointsBuffer = [];
+          recordState();
+        }
+      } else if (currentTool === 'arc') {
+        if (pointsBuffer.length < 2) {
+          pointsBuffer.push(p);
+        } else {
+          elements.push({ type: 'arc', p1: pointsBuffer[0], p2: pointsBuffer[1], ctrl: p });
+          pointsBuffer = [];
+          recordState();
+        }
+      }
+      draw();
+    });
+
+    canvas.addEventListener('mousemove', (e) => {
+      if (isPanning) {
+        panX = e.clientX - panStart.x;
+        panY = e.clientY - panStart.y;
+        draw();
+        return;
+      }
+
+      mousePos = screenToWorld(e.clientX, e.clientY);
+      
+      if (currentTool === 'erase') {
+        hoveredElementIdx = findHoveredElement(mousePos);
+      } else {
+        hoveredElementIdx = -1;
+      }
+
+      updateStatusBar();
+      draw();
+    });
+
+    window.addEventListener('mouseup', (e) => {
+      if (isPanning) {
+        isPanning = false;
+        canvas.style.cursor = isSpacePressed ? 'grab' : 'crosshair';
+      }
+    });
+
+    function updateStatusBar() {
+      const snapped = calculateSnap(mousePos);
+      const posX = formatUnit(pxToUnit(snapped.x));
+      const posY = formatUnit(pxToUnit(snapped.y));
+      const paperName = PAPER_SIZES[activePaperKey].name;
+      const zoomPct = Math.round(scale * 100);
+
+      statusBar.innerText = `Paper: ${paperName} (${activeOrientation}) | Tool: ${currentTool.toUpperCase()} | X: ${posX} Y: ${posY} | Zoom: ${zoomPct}% | Snap: ${activeSnap}`;
+    }
+
+    document.getElementById('unit-select').addEventListener('change', (e) => {
+      activeUnit = e.target.value;
+      updateUnitControls();
+    });
+
+    document.getElementById('paper-select').addEventListener('change', (e) => {
+      activePaperKey = e.target.value;
+      updateCanvasSize();
+    });
+
+    document.getElementById('paper-orient').addEventListener('change', (e) => {
+      activeOrientation = e.target.value;
+      updateCanvasSize();
+    });
+
+    document.querySelectorAll('.tool-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentTool = btn.dataset.tool;
+        pointsBuffer = [];
+        hoveredElementIdx = -1;
+        draw();
+      });
+    });
+
+    ['grid', 'end', 'mid', 'perp', 'center'].forEach(id => {
+      document.getElementById(`snap-${id}`).addEventListener('change', (e) => snaps[id] = e.target.checked);
+    });
+
+    document.getElementById('grid-size').addEventListener('input', (e) => {
+      gridSizeVal = parseFloat(e.target.value);
+      document.getElementById('grid-val').innerText = gridSizeVal;
+      draw();
+    });
+
+    document.getElementById('btn-reset-view').addEventListener('click', resetView);
+    document.getElementById('btn-undo').addEventListener('click', undo);
+    document.getElementById('btn-redo').addEventListener('click', redo);
+
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space' && !e.repeat && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+        isSpacePressed = true;
+        canvas.style.cursor = 'grab';
+      }
+
+      if (e.key === 'Escape') {
+        if (helpModal.classList.contains('open')) {
+          closeHelp();
+          return;
+        }
+        if (pointsBuffer.length > 0) {
+          pointsBuffer = [];
+          draw();
+        }
+        return;
+      }
+
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
+        return;
+      }
+
+      const isCmdOrCtrl = e.ctrlKey || e.metaKey;
+      const key = e.key.toLowerCase();
+
+      if (isCmdOrCtrl && key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        undo();
+      }
+      else if (isCmdOrCtrl && (key === 'y' || (key === 'z' && e.shiftKey))) {
+        e.preventDefault();
+        redo();
+      }
+    });
+
+    window.addEventListener('keyup', (e) => {
+      if (e.code === 'Space') {
+        isSpacePressed = false;
+        if (!isPanning) canvas.style.cursor = 'crosshair';
+      }
+    });
+
+    document.getElementById('btn-clear').addEventListener('click', () => {
+      if (confirm("Clear canvas?")) {
+        elements = [];
+        recordState();
+        draw();
+      }
+    });
+
+    document.getElementById('btn-save').addEventListener('click', () => {
+      const projectName = getSanitizedProjectName();
+      const payload = JSON.stringify({ projectName, unit: activeUnit, paper: activePaperKey, orientation: activeOrientation, elements }, null, 2);
+      const blob = new Blob([payload], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `${projectName}.gls`;
+      a.click();
+    });
+
+    document.getElementById('btn-load').addEventListener('click', () => document.getElementById('file-input').click());
+    
+    document.getElementById('file-input').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const fileNameWithoutExt = file.name.replace(/\.(gls|glass|json)$/i, '');
+      document.getElementById('project-name').value = fileNameWithoutExt;
+
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        try {
+          const data = JSON.parse(evt.target.result);
+          if (data.elements) {
+            elements = data.elements;
+            if (data.projectName) document.getElementById('project-name').value = data.projectName;
+            if (data.unit) { activeUnit = data.unit; document.getElementById('unit-select').value = activeUnit; }
+            if (data.paper) { activePaperKey = data.paper; document.getElementById('paper-select').value = activePaperKey; }
+            if (data.orientation) { activeOrientation = data.orientation; document.getElementById('paper-orient').value = activeOrientation; }
+          } else {
+            elements = data;
+          }
+          updateUnitControls();
+          updateCanvasSize();
+          recordState();
+        } catch (err) {
+          alert("Invalid .gls file format.");
+        }
+      };
+      reader.readAsText(file);
+    });
+
+    document.getElementById('btn-pdf').addEventListener('click', () => {
+      const projectName = getSanitizedProjectName();
+
+      const printCanvas = document.createElement('canvas');
+      printCanvas.width = canvas.width;
+      printCanvas.height = canvas.height;
+      const pCtx = printCanvas.getContext('2d');
+
+      pCtx.fillStyle = '#ffffff';
+      pCtx.fillRect(0, 0, printCanvas.width, printCanvas.height);
+
+      elements.forEach(el => {
+        renderElement(el, false, false, pCtx, '#000000');
+      });
+
+      const printWin = window.open('', '_blank');
+      if (!printWin) {
+        alert("Please allow pop-ups to export PDFs.");
+        return;
+      }
+
+      const imgData = printCanvas.toDataURL('image/png');
+
+      printWin.document.write(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>${projectName}</title>
+            <style>
+              @page { size: auto; margin: 0; }
+              body { margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; background: #fff; }
+              img { max-width: 100%; max-height: 100%; object-fit: contain; }
+            </style>
+          </head>
+          <body>
+            <img src="${imgData}" onload="window.print(); window.close();" />
+          </body>
+        </html>
+      `);
+      printWin.document.close();
+    });
+
+    updateUnitControls();
+    updateCanvasSize();
+  </script>
+<!-- Orchestrated by radioactivenerd using Gemma -->
+</body>
+</html>
