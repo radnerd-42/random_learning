@@ -36,7 +36,7 @@
     label { font-size: 0.85rem; color: #cccccc; display: flex; justify-content: space-between; align-items: center; }
     button, select, input[type="text"], input[type="range"] { background: #333333; color: #fff; border: 1px solid #454545; padding: 7px 10px; border-radius: 4px; font-size: 0.85rem; transition: all 0.2s; width: 100%; }
     input[type="text"]:focus { outline: none; border-color: #007acc; background: #2a2a2a; }
-    button { cursor: pointer; }
+    button { cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
     button:hover { background: #444; border-color: #007acc; }
     button.active { background: #007acc; border-color: #007acc; font-weight: bold; }
     .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
@@ -212,14 +212,14 @@
     <div class="section">
       <label>Drawing Tool</label>
       <div class="btn-grid">
-        <button class="tool-btn active" data-tool="line">Line</button>
-        <button class="tool-btn" data-tool="freedraw">Free Draw ✏️</button>
-        <button class="tool-btn" data-tool="arc">3P Arc</button>
-        <button class="tool-btn" data-tool="circle">Circle</button>
-        <button class="tool-btn" data-tool="ogee">Single S-Curve</button>
-        <button class="tool-btn" data-tool="rect">Rectangle</button>
-        <button class="tool-btn" data-tool="trim" style="background:#d9534f; border-color:#d9534f;">Trim ✂️</button>
-        <button class="tool-btn" data-tool="erase" style="background:#c9302c; border-color:#c9302c;">Eraser 🧹</button>
+        <button class="tool-btn active" data-tool="line">📏 Line</button>
+        <button class="tool-btn" data-tool="freedraw">✏️ Free Draw</button>
+        <button class="tool-btn" data-tool="arc">📐 3P Arc</button>
+        <button class="tool-btn" data-tool="circle">⚪ Circle</button>
+        <button class="tool-btn" data-tool="ogee">〰️ S-Curve</button>
+        <button class="tool-btn" data-tool="rect">▭ Rectangle</button>
+        <button class="tool-btn" data-tool="trim" style="background:#d9534f; border-color:#d9534f;">✂️ Trim</button>
+        <button class="tool-btn" data-tool="erase" style="background:#c9302c; border-color:#c9302c;">🧹 Eraser</button>
       </div>
     </div>
 
@@ -241,24 +241,24 @@
 
     <div class="section">
       <label>View Controls</label>
-      <button id="btn-reset-view">Reset Zoom & Pan</button>
+      <button id="btn-reset-view">🎯 Reset Zoom & Pan</button>
     </div>
 
     <div class="section">
       <label>History</label>
       <div class="btn-grid">
-        <button id="btn-undo">Undo (Ctrl+Z)</button>
-        <button id="btn-redo">Redo (Ctrl+Y)</button>
+        <button id="btn-undo">↩️ Undo</button>
+        <button id="btn-redo">↪️ Redo</button>
       </div>
     </div>
 
     <div class="section">
       <label>File Operations</label>
-      <button id="btn-clear">Clear Canvas</button>
-      <button id="btn-save">Save Project (.gls)</button>
-      <button id="btn-load">Load Project</button>
+      <button id="btn-clear">🗑️ Clear Canvas</button>
+      <button id="btn-save">💾 Save Project</button>
+      <button id="btn-load">📂 Load Project</button>
       <input type="file" id="file-input" style="display:none" accept=".gls,.glass,.json" />
-      <button id="btn-pdf" style="background:#28a745; border-color:#28a745;">Export PDF (1:1)</button>
+      <button id="btn-pdf" style="background:#28a745; border-color:#28a745;">📄 Export PDF (1:1)</button>
     </div>
   </div>
 
@@ -267,7 +267,7 @@
     <div id="status-bar">Tool: Line | Pos: X:0 Y:0 | Zoom: 100% | Snap: None</div>
   </div>
 
-  <button class="btn-floating-help" id="btn-open-help">? Help</button>
+  <button class="btn-floating-help" id="btn-open-help">❓ Help</button>
 
   <!-- Settings Modal -->
   <div class="modal-overlay" id="settings-modal">
@@ -332,7 +332,7 @@
           <ul>
             <li><strong>Cursor-Centered Zoom:</strong> Scroll your mouse wheel up or down to zoom in or out. The view zooms directly toward your mouse pointer position.</li>
             <li><strong>Panning the Canvas:</strong> Press and hold the <strong>Middle Mouse Wheel</strong> (or hold <kbd>Spacebar</kbd> + Left Click) and drag to move across the workspace.</li>
-            <li><strong>Reset View:</strong> Click <strong>"Reset Zoom & Pan"</strong> in the sidebar to return to default scale (100%).</li>
+            <li><strong>Reset View:</strong> Click <strong>"🎯 Reset Zoom & Pan"</strong> in the sidebar to return to default scale (100%).</li>
           </ul>
         </div>
 
@@ -347,12 +347,12 @@
         <div class="guide-section">
           <h4>✏️ Drawing Tools</h4>
           <ul>
-            <li><strong>Line:</strong> Click once for start point, click again to set end point. Shows live distance and angle readouts.</li>
+            <li><strong>Line 📏:</strong> Click once for start point, click again to set end point. Shows live distance and angle readouts.</li>
             <li><strong>Free Draw ✏️:</strong> Click and hold the left mouse button, then drag to draw smooth freehand paths. Release to finish.</li>
-            <li><strong>3P Arc:</strong> Click 3 times: Start Point → End Point → Control Curvature Point.</li>
-            <li><strong>Circle:</strong> Click once for center point, drag and click again to set radius.</li>
-            <li><strong>Single S-Curve:</strong> Click start point and end point to draw a single fluid, smooth S-curve line (ideal for organic glass borders).</li>
-            <li><strong>Rectangle:</strong> Click start corner, click opposite corner.</li>
+            <li><strong>3P Arc 📐:</strong> Click 3 times: Start Point → End Point → Control Curvature Point.</li>
+            <li><strong>Circle ⚪:</strong> Click once for center point, drag and click again to set radius.</li>
+            <li><strong>Single S-Curve 〰️:</strong> Click start point and end point to draw a single fluid, smooth S-curve line (ideal for organic glass borders).</li>
+            <li><strong>Rectangle ▭:</strong> Click start corner, click opposite corner.</li>
             <li><strong>Trim ✂️:</strong> Click any segment bounded by intersections to cut it away cleanly while preserving curves and smooth strokes.</li>
             <li><strong>Eraser 🧹:</strong> Click any line or shape to erase the entire object. Hovering highlights target shapes in red.</li>
           </ul>
@@ -382,9 +382,9 @@
         <div class="guide-section">
           <h4>💾 Saving & PDF Export</h4>
           <ul>
-            <li><strong>Save Project (.gls):</strong> Downloads your current draft as a reusable project file. Saves selected construction type.</li>
-            <li><strong>Load Project:</strong> Upload any saved <code>.gls</code> project file to resume drafting.</li>
-            <li><strong>Export PDF (1:1):</strong> Generates a full 1:1 true-scale printable template with the active stroke width for cutting glass patterns directly.</li>
+            <li><strong>Save Project 💾:</strong> Downloads your current draft as a reusable project file (.gls). Saves selected construction type.</li>
+            <li><strong>Load Project 📂:</strong> Upload any saved <code>.gls</code> project file to resume drafting.</li>
+            <li><strong>Export PDF 📄:</strong> Generates a full 1:1 true-scale printable template with the active stroke width for cutting glass patterns directly.</li>
           </ul>
         </div>
 
