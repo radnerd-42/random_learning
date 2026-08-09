@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Stained Glass Pattern Drafter</title>
+  <title>Leaded Glass Design</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; height: 100vh; background: #1a1a1a; color: #fff; overflow: hidden; position: relative; }
@@ -200,13 +200,13 @@
 
   <div id="sidebar">
     <div class="sidebar-header">
-      <h2>Leaded Glass</h2>
+      <h2>Leaded Glass Design</h2>
       <button class="btn-settings-header" id="btn-open-settings">⚙️ Settings</button>
     </div>
 
     <div class="section">
       <label for="project-name">Project Name</label>
-      <input type="text" id="project-name" value="Stained-Glass-Pattern" placeholder="Enter project name..." />
+      <input type="text" id="project-name" value="Leaded-Glass-Pattern" placeholder="Enter project name..." />
     </div>
 
     <div class="section">
@@ -476,7 +476,7 @@
     function getSanitizedProjectName() {
       const nameInput = document.getElementById('project-name').value.trim();
       const sanitized = nameInput.replace(/[/\\?%*:|"<>]/g, '-').replace(/\s+/g, '-');
-      return sanitized || 'Stained-Glass-Pattern';
+      return sanitized || 'Leaded-Glass-Pattern';
     }
 
     function pxToUnit(px) {
