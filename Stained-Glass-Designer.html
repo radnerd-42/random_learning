@@ -3,14 +3,34 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Leaded Glass Designer</title>
+  <title>Stained Glass Pattern Drafter</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; height: 100vh; background: #1a1a1a; color: #fff; overflow: hidden; position: relative; }
     #sidebar { width: 300px; background: #252526; padding: 15px; display: flex; flex-direction: column; gap: 12px; border-right: 1px solid #3c3c3c; user-select: none; overflow-y: auto; z-index: 5; }
     
-    .sidebar-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #3c3c3c; padding-bottom: 6px; }
-    .sidebar-header h2 { font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px; color: #007acc; border-bottom: none; padding-bottom: 0; }
+    .sidebar-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #3c3c3c; padding-bottom: 8px; }
+    .sidebar-header h2 { font-size: 1rem; text-transform: uppercase; letter-spacing: 0.5px; color: #007acc; border-bottom: none; padding-bottom: 0; }
+
+    .btn-settings-header {
+      background: #333333;
+      color: #cccccc;
+      border: 1px solid #454545;
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      width: auto;
+      transition: all 0.2s;
+    }
+    .btn-settings-header:hover {
+      background: #444444;
+      color: #ffffff;
+      border-color: #007acc;
+    }
 
     .section { display: flex; flex-direction: column; gap: 6px; }
     label { font-size: 0.85rem; color: #cccccc; display: flex; justify-content: space-between; align-items: center; }
@@ -55,7 +75,6 @@
     canvas { background: #1e1e1e; box-shadow: 0 0 15px rgba(0,0,0,0.8); cursor: crosshair; }
     #status-bar { position: absolute; bottom: 10px; left: 10px; background: rgba(0,0,0,0.85); padding: 6px 12px; border-radius: 4px; font-family: monospace; font-size: 0.8rem; pointer-events: none; border: 1px solid #444; z-index: 10; }
 
-    /* Floating Help Button in Bottom Right Corner */
     .btn-floating-help {
       position: fixed;
       bottom: 20px;
@@ -81,7 +100,6 @@
       transform: translateY(-2px);
     }
 
-    /* Modal Popup Styling */
     .modal-overlay {
       position: fixed;
       top: 0;
@@ -109,6 +127,9 @@
       flex-direction: column;
       box-shadow: 0 10px 30px rgba(0,0,0,0.5);
       position: relative;
+    }
+    .modal-content.settings-modal {
+      max-width: 420px;
     }
     .modal-header {
       padding: 16px 20px;
@@ -179,52 +200,26 @@
 
   <div id="sidebar">
     <div class="sidebar-header">
-      <h2>Leaded Glass Designer</h2>
+      <h2>Leaded Glass</h2>
+      <button class="btn-settings-header" id="btn-open-settings">⚙️ Settings</button>
     </div>
 
     <div class="section">
-      <label for="project-name">Pattern Name</label>
-      <input type="text" id="project-name" value="Leaded-Glass-Pattern" placeholder="Enter pattern name..." />
+      <label for="project-name">Project Name</label>
+      <input type="text" id="project-name" value="Stained-Glass-Pattern" placeholder="Enter project name..." />
     </div>
 
-    <div class="section">
-      <label>Units Mode</label>
-      <select id="unit-select">
-        <option value="in" selected>Inches (in)</option>
-        <option value="mm">Millimeters (mm)</option>
-      </select>
-    </div>
-
-    <div class="section">
-      <label>Paper Setup</label>
-      <select id="paper-select">
-        <optgroup label="US Standard">
-          <option value="letter" selected>US Letter (8.5" × 11")</option>
-          <option value="legal">US Legal (8.5" × 14")</option>
-          <option value="tabloid">US Tabloid (11" × 17")</option>
-        </optgroup>
-        <optgroup label="ISO Standard">
-          <option value="a4">A4 (210 × 297 mm)</option>
-          <option value="a3">A3 (297 × 420 mm)</option>
-          <option value="a2">A2 (420 × 594 mm)</option>
-        </optgroup>
-      </select>
-      <select id="paper-orient">
-        <option value="portrait" selected>Portrait</option>
-        <option value="landscape">Landscape</option>
-      </select>
-    </div>
-    
     <div class="section">
       <label>Drawing Tool</label>
       <div class="btn-grid">
         <button class="tool-btn active" data-tool="line">Line</button>
+        <button class="tool-btn" data-tool="freedraw">Free Draw ✏️</button>
         <button class="tool-btn" data-tool="arc">3P Arc</button>
         <button class="tool-btn" data-tool="circle">Circle</button>
         <button class="tool-btn" data-tool="ogee">Single S-Curve</button>
         <button class="tool-btn" data-tool="rect">Rectangle</button>
         <button class="tool-btn" data-tool="trim" style="background:#d9534f; border-color:#d9534f;">Trim ✂️</button>
-        <button class="tool-btn" data-tool="erase" style="background:#c9302c; border-color:#c9302c; grid-column: span 2;">Eraser 🧹</button>
+        <button class="tool-btn" data-tool="erase" style="background:#c9302c; border-color:#c9302c;">Eraser 🧹</button>
       </div>
     </div>
 
@@ -260,8 +255,8 @@
     <div class="section">
       <label>File Operations</label>
       <button id="btn-clear">Clear Canvas</button>
-      <button id="btn-save">Save Pattern (.gls)</button>
-      <button id="btn-load">Load Pattern</button>
+      <button id="btn-save">Save Project (.gls)</button>
+      <button id="btn-load">Load Project</button>
       <input type="file" id="file-input" style="display:none" accept=".gls,.glass,.json" />
       <button id="btn-pdf" style="background:#28a745; border-color:#28a745;">Export PDF (1:1)</button>
     </div>
@@ -272,10 +267,58 @@
     <div id="status-bar">Tool: Line | Pos: X:0 Y:0 | Zoom: 100% | Snap: None</div>
   </div>
 
-  <!-- Bottom-Right Floating Help Button -->
   <button class="btn-floating-help" id="btn-open-help">? Help</button>
 
-  <!-- Help Modal Popup -->
+  <!-- Settings Modal -->
+  <div class="modal-overlay" id="settings-modal">
+    <div class="modal-content settings-modal">
+      <div class="modal-header">
+        <h3>⚙️ Project Settings</h3>
+        <button class="close-btn" id="btn-close-settings">&times;</button>
+      </div>
+      <div class="modal-body">
+        
+        <div class="section">
+          <label>Construction Type</label>
+          <select id="construction-select">
+            <option value="foil">Copper Foil (4px / ~1/24" gap)</option>
+            <option value="came" selected>Lead Came (6px / 1/16" gap)</option>
+          </select>
+        </div>
+
+        <div class="section">
+          <label>Units Mode</label>
+          <select id="unit-select">
+            <option value="in" selected>Inches (in)</option>
+            <option value="mm">Millimeters (mm)</option>
+          </select>
+        </div>
+
+        <div class="section">
+          <label>Paper Setup</label>
+          <select id="paper-select">
+            <optgroup label="US Standard">
+              <option value="letter" selected>US Letter (8.5" × 11")</option>
+              <option value="legal">US Legal (8.5" × 14")</option>
+              <option value="tabloid">US Tabloid (11" × 17")</option>
+            </optgroup>
+            <optgroup label="ISO Standard">
+              <option value="a4">A4 (210 × 297 mm)</option>
+              <option value="a3">A3 (297 × 420 mm)</option>
+              <option value="a2">A2 (420 × 594 mm)</option>
+            </optgroup>
+          </select>
+          <select id="paper-orient" style="margin-top: 6px;">
+            <option value="portrait" selected>Portrait</option>
+            <option value="landscape">Landscape</option>
+          </select>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Help Modal -->
   <div class="modal-overlay" id="help-modal">
     <div class="modal-content">
       <div class="modal-header">
@@ -294,14 +337,23 @@
         </div>
 
         <div class="guide-section">
+          <h4>🛠️ Construction Type & Cut Gaps</h4>
+          <ul>
+            <li><strong>Copper Foil (4px):</strong> Renders a thinner ~1/24" (1.06mm) stroke width designed for tighter glass fits and pattern shears when foiling. Access via <strong>⚙️ Settings</strong>.</li>
+            <li><strong>Lead Came (6px):</strong> Renders a 1/16" (1.59mm) stroke representing the standard heart of the lead came between glass pieces.</li>
+          </ul>
+        </div>
+
+        <div class="guide-section">
           <h4>✏️ Drawing Tools</h4>
           <ul>
             <li><strong>Line:</strong> Click once for start point, click again to set end point. Shows live distance and angle readouts.</li>
+            <li><strong>Free Draw ✏️:</strong> Click and hold the left mouse button, then drag to draw smooth freehand paths. Release to finish.</li>
             <li><strong>3P Arc:</strong> Click 3 times: Start Point → End Point → Control Curvature Point.</li>
             <li><strong>Circle:</strong> Click once for center point, drag and click again to set radius.</li>
             <li><strong>Single S-Curve:</strong> Click start point and end point to draw a single fluid, smooth S-curve line (ideal for organic glass borders).</li>
             <li><strong>Rectangle:</strong> Click start corner, click opposite corner.</li>
-            <li><strong>Trim ✂️:</strong> Click any line segment bounded by intersections to cut it away cleanly.</li>
+            <li><strong>Trim ✂️:</strong> Click any segment bounded by intersections to cut it away cleanly while preserving curves and smooth strokes.</li>
             <li><strong>Eraser 🧹:</strong> Click any line or shape to erase the entire object. Hovering highlights target shapes in red.</li>
           </ul>
         </div>
@@ -318,8 +370,9 @@
         </div>
 
         <div class="guide-section">
-          <h4>📄 Paper & Pattern Setup</h4>
+          <h4>📄 Paper & Project Setup</h4>
           <ul>
+            <li><strong>Settings Menu:</strong> Access Units Mode, Construction Type, and Paper Setup by clicking <strong>⚙️ Settings</strong> in the top sidebar header.</li>
             <li><strong>Units Mode:</strong> Switch seamlessly between <em>Inches (in)</em> and <em>Millimeters (mm)</em>.</li>
             <li><strong>Paper Setup:</strong> Standard paper sizes (US Letter, Legal, Tabloid, ISO A4, A3, A2) in Portrait or Landscape.</li>
             <li><strong>Grid Size:</strong> Adjust the slider to increase or decrease grid spacing dynamically.</li>
@@ -329,9 +382,9 @@
         <div class="guide-section">
           <h4>💾 Saving & PDF Export</h4>
           <ul>
-            <li><strong>Save Pattern (.gls):</strong> Downloads your current draft as a reusable project file.</li>
-            <li><strong>Load Pattern:</strong> Upload any saved <code>.gls</code> project file to resume drafting.</li>
-            <li><strong>Export PDF (1:1):</strong> Generates a full 1:1 true-scale printable template suitable for cutting glass patterns directly.</li>
+            <li><strong>Save Project (.gls):</strong> Downloads your current draft as a reusable project file. Saves selected construction type.</li>
+            <li><strong>Load Project:</strong> Upload any saved <code>.gls</code> project file to resume drafting.</li>
+            <li><strong>Export PDF (1:1):</strong> Generates a full 1:1 true-scale printable template with the active stroke width for cutting glass patterns directly.</li>
           </ul>
         </div>
 
@@ -340,7 +393,7 @@
           <ul>
             <li><kbd>Ctrl</kbd> + <kbd>Z</kbd> — Undo last action</li>
             <li><kbd>Ctrl</kbd> + <kbd>Y</kbd> — Redo action</li>
-            <li><kbd>Esc</kbd> — Cancel active drawing line/point buffer (or close Help guide)</li>
+            <li><kbd>Esc</kbd> — Cancel active drawing line/point buffer (or close open popups)</li>
             <li><kbd>Spacebar</kbd> (Hold) + Drag — Pan across canvas</li>
           </ul>
         </div>
@@ -358,14 +411,15 @@
       legal:   { name: 'Legal',   inW: 8.5,  inH: 14   },
       tabloid: { name: 'Tabloid', inW: 11,   inH: 17   },
       a4:      { name: 'A4',      inW: 8.27, inH: 11.69},
-      a3:      { name: 'A3',      inW: 11.69,inH: 16.54},
-      a2:      { name: 'A2',      inW: 16.54,inH: 23.39}
+      a3:      { name: 'A3',      inW: 297/MM_PER_INCH, inH: 420/MM_PER_INCH},
+      a2:      { name: 'A2',      inW: 420/MM_PER_INCH, inH: 594/MM_PER_INCH}
     };
 
     const canvas = document.getElementById('draftCanvas');
     const ctx = canvas.getContext('2d');
     const statusBar = document.getElementById('status-bar');
 
+    let constructionType = 'came'; // 'foil' (4px) or 'came' (6px)
     let activeUnit = 'in';
     let currentTool = 'line';
     let gridSizeVal = 0.25;
@@ -374,6 +428,9 @@
     let historyIndex = 0;
 
     let pointsBuffer = [];
+    let isDrawingFreehand = false;
+    let freehandPoints = [];
+
     let mousePos = { x: 0, y: 0 };
     let activeSnap = null;
     let hoveredElementIdx = -1;
@@ -381,7 +438,6 @@
     let activePaperKey = 'letter';
     let activeOrientation = 'portrait';
 
-    // Transform State (Zoom & Pan)
     let scale = 1.0;
     let panX = 0;
     let panY = 0;
@@ -391,13 +447,19 @@
 
     const snaps = { grid: true, end: true, mid: true, perp: true, center: true };
 
-    // Help Modal Logic
     const helpModal = document.getElementById('help-modal');
     const openHelpBtn = document.getElementById('btn-open-help');
     const closeHelpBtn = document.getElementById('btn-close-help');
 
+    const settingsModal = document.getElementById('settings-modal');
+    const openSettingsBtn = document.getElementById('btn-open-settings');
+    const closeSettingsBtn = document.getElementById('btn-close-settings');
+
     function openHelp() { helpModal.classList.add('open'); }
     function closeHelp() { helpModal.classList.remove('open'); }
+
+    function openSettings() { settingsModal.classList.add('open'); }
+    function closeSettings() { settingsModal.classList.remove('open'); }
 
     openHelpBtn.addEventListener('click', openHelp);
     closeHelpBtn.addEventListener('click', closeHelp);
@@ -405,10 +467,16 @@
       if (e.target === helpModal) closeHelp();
     });
 
+    openSettingsBtn.addEventListener('click', openSettings);
+    closeSettingsBtn.addEventListener('click', closeSettings);
+    settingsModal.addEventListener('click', (e) => {
+      if (e.target === settingsModal) closeSettings();
+    });
+
     function getSanitizedProjectName() {
       const nameInput = document.getElementById('project-name').value.trim();
       const sanitized = nameInput.replace(/[/\\?%*:|"<>]/g, '-').replace(/\s+/g, '-');
-      return sanitized || 'Leaded-Glass-Pattern';
+      return sanitized || 'Stained-Glass-Pattern';
     }
 
     function pxToUnit(px) {
@@ -479,6 +547,8 @@
         historyIndex--;
         elements = JSON.parse(JSON.stringify(history[historyIndex]));
         pointsBuffer = [];
+        freehandPoints = [];
+        isDrawingFreehand = false;
         draw();
       }
     }
@@ -488,6 +558,8 @@
         historyIndex++;
         elements = JSON.parse(JSON.stringify(history[historyIndex]));
         pointsBuffer = [];
+        freehandPoints = [];
+        isDrawingFreehand = false;
         draw();
       }
     }
@@ -504,12 +576,10 @@
       return dist(p, { x: a.x + t * (b.x - a.x), y: a.y + t * (b.y - a.y) });
     }
 
-    // Single S-Curve Bezier Control Point Calculator
     function getSingleSCurveControlPoints(p1, p2) {
       const dx = p2.x - p1.x;
       const dy = p2.y - p1.y;
       
-      // Calculate perpendicular offset vector for smooth S-shape
       const perpX = -dy * 0.35;
       const perpY = dx * 0.35;
 
@@ -526,10 +596,36 @@
       return { cp1, cp2 };
     }
 
+    function lerp(p1, p2, t) {
+      return { x: p1.x + t * (p2.x - p1.x), y: p1.y + t * (p2.y - p1.y) };
+    }
+
+    function splitCubicBezier(p0, p1, p2, p3, t) {
+      const p01 = lerp(p0, p1, t);
+      const p12 = lerp(p1, p2, t);
+      const p23 = lerp(p2, p3, t);
+      const p012 = lerp(p01, p12, t);
+      const p123 = lerp(p12, p23, t);
+      const p0123 = lerp(p012, p123, t);
+
+      return {
+        left: { p0, p1: p01, p2: p012, p3: p0123 },
+        right: { p0: p0123, p1: p123, p2: p23, p3 }
+      };
+    }
+
+    function getCubicSubsegment(p0, p1, p2, p3, t1, t2) {
+      const rightPart = splitCubicBezier(p0, p1, p2, p3, t1).right;
+      const t2Prime = (t2 - t1) / (1 - t1);
+      return splitCubicBezier(rightPart.p0, rightPart.p1, rightPart.p2, rightPart.p3, t2Prime).left;
+    }
+
     function sampleElement(el, numSamples = 100) {
       const pts = [];
       if (el.type === 'line') {
         return [ { ...el.p1, t: 0 }, { ...el.p2, t: 1 } ];
+      } else if (el.type === 'freedraw') {
+        return el.points.map((p, idx) => ({ ...p, t: idx / Math.max(1, el.points.length - 1) }));
       } else if (el.type === 'circle') {
         const startAng = el.startAngle ?? 0;
         const endAng = el.endAngle ?? (Math.PI * 2);
@@ -548,11 +644,11 @@
           });
         }
       } else if (el.type === 'ogee') {
-        const { cp1, cp2 } = getSingleSCurveControlPoints(el.p1, el.p2);
+        const cps = el.cp1 ? { cp1: el.cp1, cp2: el.cp2 } : getSingleSCurveControlPoints(el.p1, el.p2);
         for (let i = 0; i <= numSamples; i++) {
           const t = i / numSamples;
-          const x = (1 - t)**3 * el.p1.x + 3 * (1 - t)**2 * t * cp1.x + 3 * (1 - t) * t**2 * cp2.x + t**3 * el.p2.x;
-          const y = (1 - t)**3 * el.p1.y + 3 * (1 - t)**2 * t * cp1.y + 3 * (1 - t) * t**2 * cp2.y + t**3 * el.p2.y;
+          const x = (1 - t)**3 * el.p1.x + 3 * (1 - t)**2 * t * cps.cp1.x + 3 * (1 - t) * t**2 * cps.cp2.x + t**3 * el.p2.x;
+          const y = (1 - t)**3 * el.p1.y + 3 * (1 - t)**2 * t * cps.cp1.y + 3 * (1 - t) * t**2 * cps.cp2.y + t**3 * el.p2.y;
           pts.push({ x, y, t });
         }
       }
@@ -641,15 +737,30 @@
 
           segments.push({ type: 'arc', p1: pt1, p2: pt2, ctrl: ctrlPt, tSpan: [t1, t2] });
         } else if (el.type === 'ogee') {
-          const poly = sampleElement(el, 100);
-          const i1 = Math.floor(t1 * 100);
-          const i2 = Math.floor(t2 * 100);
+          const origCps = el.cp1 ? { cp1: el.cp1, cp2: el.cp2 } : getSingleSCurveControlPoints(el.p1, el.p2);
+          const subBezier = getCubicSubsegment(el.p1, origCps.cp1, origCps.cp2, el.p2, t1, t2);
+          
           segments.push({
-            type: 'line',
-            p1: { x: poly[i1].x, y: poly[i1].y },
-            p2: { x: poly[i2].x, y: poly[i2].y },
+            type: 'ogee',
+            p1: subBezier.p0,
+            p2: subBezier.p3,
+            cp1: subBezier.p1,
+            cp2: subBezier.p2,
             tSpan: [t1, t2]
           });
+        } else if (el.type === 'freedraw') {
+          const totalPts = el.points.length;
+          const i1 = Math.floor(t1 * (totalPts - 1));
+          const i2 = Math.ceil(t2 * (totalPts - 1));
+          const subPoints = el.points.slice(i1, i2 + 1);
+
+          if (subPoints.length > 1) {
+            segments.push({
+              type: 'freedraw',
+              points: subPoints,
+              tSpan: [t1, t2]
+            });
+          }
         }
       }
       return segments;
@@ -754,7 +865,7 @@
     }
 
     function calculateSnap(raw) {
-      if (currentTool === 'trim' || currentTool === 'erase') return raw;
+      if (currentTool === 'trim' || currentTool === 'erase' || currentTool === 'freedraw') return raw;
 
       const threshold = 12 / scale;
       let closest = null;
@@ -766,6 +877,10 @@
         if (snaps.end) {
           if (el.type === 'line' || el.type === 'rect') targets.push({ pt: el.p1, type: 'Endpoint' }, { pt: el.p2, type: 'Endpoint' });
           if (el.type === 'arc' || el.type === 'ogee') targets.push({ pt: el.p1, type: 'Endpoint' }, { pt: el.p2, type: 'Endpoint' });
+          if (el.type === 'freedraw' && el.points.length > 0) {
+            targets.push({ pt: el.points[0], type: 'Endpoint' });
+            targets.push({ pt: el.points[el.points.length - 1], type: 'Endpoint' });
+          }
         }
         if (snaps.mid && el.type === 'line') {
           targets.push({ pt: mid(el.p1, el.p2), type: 'Midpoint' });
@@ -828,7 +943,8 @@
       targetCtx.save();
       targetCtx.strokeStyle = overrideColor ? overrideColor : (isHighlighted ? '#ff4d4d' : (isPreview ? '#007acc' : '#ffffff'));
       
-      const baseWidth = isHighlighted ? 8 : (isPreview ? 2 : 6);
+      const standardWidth = (constructionType === 'foil') ? 4 : 6;
+      const baseWidth = isHighlighted ? (standardWidth + 2) : (isPreview ? 2 : standardWidth);
       targetCtx.lineWidth = baseWidth / scale;
       
       targetCtx.lineCap = 'round';
@@ -841,6 +957,15 @@
         targetCtx.moveTo(el.p1.x, el.p1.y);
         targetCtx.lineTo(el.p2.x, el.p2.y);
         targetCtx.stroke();
+      } else if (el.type === 'freedraw') {
+        if (el.points && el.points.length > 1) {
+          targetCtx.beginPath();
+          targetCtx.moveTo(el.points[0].x, el.points[0].y);
+          for (let i = 1; i < el.points.length; i++) {
+            targetCtx.lineTo(el.points[i].x, el.points[i].y);
+          }
+          targetCtx.stroke();
+        }
       } else if (el.type === 'rect') {
         targetCtx.beginPath();
         targetCtx.rect(el.p1.x, el.p1.y, el.p2.x - el.p1.x, el.p2.y - el.p1.y);
@@ -857,10 +982,10 @@
         targetCtx.quadraticCurveTo(el.ctrl.x, el.ctrl.y, el.p2.x, el.p2.y);
         targetCtx.stroke();
       } else if (el.type === 'ogee') {
-        const { cp1, cp2 } = getSingleSCurveControlPoints(el.p1, el.p2);
+        const cps = el.cp1 ? { cp1: el.cp1, cp2: el.cp2 } : getSingleSCurveControlPoints(el.p1, el.p2);
         targetCtx.beginPath();
         targetCtx.moveTo(el.p1.x, el.p1.y);
-        targetCtx.bezierCurveTo(cp1.x, cp1.y, cp2.x, cp2.y, el.p2.x, el.p2.y);
+        targetCtx.bezierCurveTo(cps.cp1.x, cps.cp1.y, cps.cp2.x, cps.cp2.y, el.p2.x, el.p2.y);
         targetCtx.stroke();
       }
 
@@ -904,7 +1029,6 @@
       ctx.save();
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Apply Zoom & Pan Matrix
       ctx.translate(panX, panY);
       ctx.scale(scale, scale);
 
@@ -916,6 +1040,11 @@
       });
 
       const currentSnapPt = calculateSnap(mousePos);
+
+      if (isDrawingFreehand && freehandPoints.length > 0) {
+        renderElement({ type: 'freedraw', points: freehandPoints }, true);
+      }
+
       if (pointsBuffer.length > 0) {
         const p1 = pointsBuffer[0];
         if (currentTool === 'line') {
@@ -950,7 +1079,6 @@
       };
     }
 
-    // Zooming
     canvas.addEventListener('wheel', (e) => {
       e.preventDefault();
       const rect = canvas.getBoundingClientRect();
@@ -968,7 +1096,6 @@
       updateStatusBar();
     }, { passive: false });
 
-    // Panning & Clicking
     canvas.addEventListener('mousedown', (e) => {
       if (e.button === 1 || (e.button === 0 && isSpacePressed)) {
         isPanning = true;
@@ -981,6 +1108,13 @@
       if (e.button !== 0) return;
 
       const p = calculateSnap(mousePos);
+
+      if (currentTool === 'freedraw') {
+        isDrawingFreehand = true;
+        freehandPoints = [{ x: p.x, y: p.y }];
+        draw();
+        return;
+      }
 
       if (currentTool === 'erase') {
         const targetIdx = findHoveredElement(mousePos);
@@ -1032,6 +1166,16 @@
       }
 
       mousePos = screenToWorld(e.clientX, e.clientY);
+
+      if (isDrawingFreehand) {
+        const lastPt = freehandPoints[freehandPoints.length - 1];
+        if (!lastPt || dist(lastPt, mousePos) > (2 / scale)) {
+          freehandPoints.push({ x: mousePos.x, y: mousePos.y });
+          draw();
+        }
+        updateStatusBar();
+        return;
+      }
       
       if (currentTool === 'erase') {
         hoveredElementIdx = findHoveredElement(mousePos);
@@ -1048,6 +1192,16 @@
         isPanning = false;
         canvas.style.cursor = isSpacePressed ? 'grab' : 'crosshair';
       }
+
+      if (isDrawingFreehand) {
+        isDrawingFreehand = false;
+        if (freehandPoints.length > 1) {
+          elements.push({ type: 'freedraw', points: [...freehandPoints] });
+          recordState();
+        }
+        freehandPoints = [];
+        draw();
+      }
     });
 
     function updateStatusBar() {
@@ -1056,9 +1210,16 @@
       const posY = formatUnit(pxToUnit(snapped.y));
       const paperName = PAPER_SIZES[activePaperKey].name;
       const zoomPct = Math.round(scale * 100);
+      const modeLabel = constructionType === 'foil' ? 'Foil (4px)' : 'Came (6px)';
 
-      statusBar.innerText = `Paper: ${paperName} (${activeOrientation}) | Tool: ${currentTool.toUpperCase()} | X: ${posX} Y: ${posY} | Zoom: ${zoomPct}% | Snap: ${activeSnap}`;
+      statusBar.innerText = `Type: ${modeLabel} | Paper: ${paperName} (${activeOrientation}) | Tool: ${currentTool.toUpperCase()} | X: ${posX} Y: ${posY} | Zoom: ${zoomPct}% | Snap: ${activeSnap}`;
     }
+
+    document.getElementById('construction-select').addEventListener('change', (e) => {
+      constructionType = e.target.value;
+      draw();
+      updateStatusBar();
+    });
 
     document.getElementById('unit-select').addEventListener('change', (e) => {
       activeUnit = e.target.value;
@@ -1081,6 +1242,8 @@
         btn.classList.add('active');
         currentTool = btn.dataset.tool;
         pointsBuffer = [];
+        freehandPoints = [];
+        isDrawingFreehand = false;
         hoveredElementIdx = -1;
         draw();
       });
@@ -1107,12 +1270,18 @@
       }
 
       if (e.key === 'Escape') {
+        if (settingsModal.classList.contains('open')) {
+          closeSettings();
+          return;
+        }
         if (helpModal.classList.contains('open')) {
           closeHelp();
           return;
         }
-        if (pointsBuffer.length > 0) {
+        if (pointsBuffer.length > 0 || isDrawingFreehand) {
           pointsBuffer = [];
+          freehandPoints = [];
+          isDrawingFreehand = false;
           draw();
         }
         return;
@@ -1152,7 +1321,7 @@
 
     document.getElementById('btn-save').addEventListener('click', () => {
       const projectName = getSanitizedProjectName();
-      const payload = JSON.stringify({ projectName, unit: activeUnit, paper: activePaperKey, orientation: activeOrientation, elements }, null, 2);
+      const payload = JSON.stringify({ projectName, constructionType, unit: activeUnit, paper: activePaperKey, orientation: activeOrientation, elements }, null, 2);
       const blob = new Blob([payload], { type: 'application/json' });
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
@@ -1176,6 +1345,7 @@
           if (data.elements) {
             elements = data.elements;
             if (data.projectName) document.getElementById('project-name').value = data.projectName;
+            if (data.constructionType) { constructionType = data.constructionType; document.getElementById('construction-select').value = constructionType; }
             if (data.unit) { activeUnit = data.unit; document.getElementById('unit-select').value = activeUnit; }
             if (data.paper) { activePaperKey = data.paper; document.getElementById('paper-select').value = activePaperKey; }
             if (data.orientation) { activeOrientation = data.orientation; document.getElementById('paper-orient').value = activeOrientation; }
@@ -1237,6 +1407,5 @@
     updateUnitControls();
     updateCanvasSize();
   </script>
-<!-- Orchestrated by radioactivenerd using Gemma -->
 </body>
 </html>
