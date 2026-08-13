@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <title>Leaded Glass Design</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -35,7 +36,7 @@
     .section { display: flex; flex-direction: column; gap: 6px; }
     label { font-size: 0.85rem; color: #cccccc; display: flex; justify-content: space-between; align-items: center; }
     button, select, input[type="text"], input[type="range"] { background: #333333; color: #fff; border: 1px solid #454545; padding: 7px 10px; border-radius: 4px; font-size: 0.85rem; transition: all 0.2s; width: 100%; }
-    input[type="text"]:focus { outline: none; border-color: #007acc; background: #2a2a2a; }
+    input[type="text"]:focus, select:focus { outline: none; border-color: #007acc; background: #2a2a2a; }
     button { cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
     button:hover { background: #444; border-color: #007acc; }
     button.active { background: #007acc; border-color: #007acc; font-weight: bold; }
@@ -209,17 +210,32 @@
       <input type="text" id="project-name" value="Leaded-Glass-Pattern" placeholder="Enter project name..." />
     </div>
 
+    <!-- Group 1: Drawing Tools -->
     <div class="section">
-      <label>Drawing Tool</label>
+      <label>Drawing Tools</label>
       <div class="btn-grid">
-        <button class="tool-btn active" data-tool="line">📏 Line</button>
+        <button class="tool-btn" data-tool="line">📏 Line</button>
         <button class="tool-btn" data-tool="freedraw">✏️ Free Draw</button>
         <button class="tool-btn" data-tool="arc">📐 3P Arc</button>
         <button class="tool-btn" data-tool="circle">⚪ Circle</button>
         <button class="tool-btn" data-tool="ogee">〰️ S-Curve</button>
         <button class="tool-btn" data-tool="rect">▭ Rectangle</button>
+      </div>
+    </div>
+
+    <!-- Group 2: Editing Tools -->
+    <div class="section">
+      <label>Editing Tools</label>
+      <div class="btn-grid">
+        <button class="tool-btn active" data-tool="select" style="background:#17a2b8; border-color:#17a2b8; grid-column: span 2;">↖️ Select / Move</button>
+        <button id="btn-mirror-h">↔️ Mirror Horiz</button>
+        <button id="btn-mirror-v">↕️ Mirror Vert</button>
         <button class="tool-btn" data-tool="trim" style="background:#d9534f; border-color:#d9534f;">✂️ Trim</button>
         <button class="tool-btn" data-tool="erase" style="background:#c9302c; border-color:#c9302c;">🧹 Eraser</button>
+        <button id="btn-copy">📋 Copy</button>
+        <button id="btn-paste">📥 Paste</button>
+        <button id="btn-undo">↩️ Undo</button>
+        <button id="btn-redo">↪️ Redo</button>
       </div>
     </div>
 
@@ -244,19 +260,19 @@
       <button id="btn-reset-view">🎯 Reset Zoom & Pan</button>
     </div>
 
-    <div class="section">
-      <label>History</label>
-      <div class="btn-grid">
-        <button id="btn-undo">↩️ Undo</button>
-        <button id="btn-redo">↪️ Redo</button>
-      </div>
+    <!-- Group 3: Server Samples & Templates -->
+    <div class="toolbar-group">
+      <label for="templateSelect">Templates:</label>
+      <select id="templateSelect">
+        <option value="" disabled selected>Loading templates...</option>
+      </select>
     </div>
 
     <div class="section">
       <label>File Operations</label>
       <button id="btn-clear">🗑️ Clear Canvas</button>
       <button id="btn-save">💾 Save Project</button>
-      <button id="btn-load">📂 Load Project</button>
+      <button id="btn-load">📂 Load Local File</button>
       <input type="file" id="file-input" style="display:none" accept=".gls,.glass,.json" />
       <button id="btn-pdf" style="background:#28a745; border-color:#28a745;">📄 Export PDF (1:1)</button>
     </div>
@@ -264,7 +280,7 @@
 
   <div id="canvas-container">
     <canvas id="draftCanvas"></canvas>
-    <div id="status-bar">Tool: Line | Pos: X:0 Y:0 | Zoom: 100% | Snap: None</div>
+    <div id="status-bar">Tool: Select / Move | Pos: X:0 Y:0 | Zoom: 100% | Snap: None</div>
   </div>
 
   <button class="btn-floating-help" id="btn-open-help">❓ Help</button>
@@ -281,8 +297,8 @@
         <div class="section">
           <label>Construction Type</label>
           <select id="construction-select">
-            <option value="foil">Copper Foil (4px / ~1/24" gap)</option>
-            <option value="came" selected>Lead Came (6px / 1/16" gap)</option>
+            <option value="foil" selected>Copper Foil (4px / ~1/24" gap)</option>
+            <option value="came">Lead Came (6px / 1/16" gap)</option>
           </select>
         </div>
 
@@ -337,24 +353,26 @@
         </div>
 
         <div class="guide-section">
-          <h4>🛠️ Construction Type & Cut Gaps</h4>
+          <h4>✏️ Drawing Tools</h4>
           <ul>
-            <li><strong>Copper Foil (4px):</strong> Renders a thinner ~1/24" (1.06mm) stroke width designed for tighter glass fits and pattern shears when foiling. Access via <strong>⚙️ Settings</strong>.</li>
-            <li><strong>Lead Came (6px):</strong> Renders a 1/16" (1.59mm) stroke representing the standard heart of the lead came between glass pieces.</li>
+            <li><strong>Line 📏:</strong> Click once to set the start point, then click a second time to set the end point. Real-time length and angle readouts will display along the segment.</li>
+            <li><strong>Free Draw ✏️:</strong> Click and hold the primary mouse button while moving across the screen to create continuous freehand paths. Release to complete.</li>
+            <li><strong>3P Arc 📐:</strong> Requires 3 clicks: 1st click sets Start Point, 2nd click sets End Point, and 3rd click defines the Arc Curvature Control Point.</li>
+            <li><strong>Circle ⚪:</strong> Click once for the center point, drag out to desired size, and click again to confirm the radius.</li>
+            <li><strong>S-Curve 〰️:</strong> Click start and end points to generate a smooth, fluid double-curve segment, ideal for organic glass borders.</li>
+            <li><strong>Rectangle ▭:</strong> Click once for the top-left corner and click again for the opposite corner. Automatically breaks into individual editable line segments when using the Trim tool.</li>
           </ul>
         </div>
 
         <div class="guide-section">
-          <h4>✏️ Drawing Tools</h4>
+          <h4>🛠️ Editing Tools & Selection</h4>
           <ul>
-            <li><strong>Line 📏:</strong> Click once for start point, click again to set end point. Shows live distance and angle readouts.</li>
-            <li><strong>Free Draw ✏️:</strong> Click and hold the left mouse button, then drag to draw smooth freehand paths. Release to finish.</li>
-            <li><strong>3P Arc 📐:</strong> Click 3 times: Start Point → End Point → Control Curvature Point.</li>
-            <li><strong>Circle ⚪:</strong> Click once for center point, drag and click again to set radius.</li>
-            <li><strong>Single S-Curve 〰️:</strong> Click start point and end point to draw a single fluid, smooth S-curve line (ideal for organic glass borders).</li>
-            <li><strong>Rectangle ▭:</strong> Click start corner, click opposite corner.</li>
-            <li><strong>Trim ✂️:</strong> Click any segment bounded by intersections to cut it away cleanly while preserving curves and smooth strokes.</li>
-            <li><strong>Eraser 🧹:</strong> Click any line or shape to erase the entire object. Hovering highlights target shapes in red.</li>
+            <li><strong>Select / Move ↖️:</strong> Click individual shapes or drag a selection box around multiple objects. Drag any highlighted object to move the entire selection while retaining proportions.</li>
+            <li><strong>Trim ✂️:</strong> Click any segment bound by line/arc intersections to cleanly clip away only that specific section.</li>
+            <li><strong>Eraser 🧹:</strong> Hover over any object (highlighted in red) and click to delete the full line or curve shape.</li>
+            <li><strong>Mirror Horizontal ↔️:</strong> Flips selected object(s) horizontally across the center axis of their bounding box.</li>
+            <li><strong>Mirror Vertical ↕️:</strong> Flips selected object(s) vertically across the center axis of their bounding box.</li>
+            <li><strong>Copy & Paste 📋/📥:</strong> Duplicate selected elements across the canvas while keeping snapping and stroke alignments intact.</li>
           </ul>
         </div>
 
@@ -362,7 +380,7 @@
           <h4>🧲 Snapping Features</h4>
           <ul>
             <li><strong>Grid Snap:</strong> Magnetically snaps cursor to background grid intersections.</li>
-            <li><strong>Endpoints:</strong> Snaps precisely to start/end points of existing shapes.</li>
+            <li><strong>Endpoints:</strong> Snaps precisely to start/end points of existing lines, arcs, or freehand paths.</li>
             <li><strong>Midpoints:</strong> Snaps directly to center points of straight line segments.</li>
             <li><strong>Center Snap:</strong> Snaps to center points of drawn circles.</li>
             <li><strong>Snap Perpendicular:</strong> When drawing a line, snaps to form an exact 90° angle with target lines.</li>
@@ -370,30 +388,35 @@
         </div>
 
         <div class="guide-section">
-          <h4>📄 Paper & Project Setup</h4>
+          <h4>🖼️ Server Templates & Project Files</h4>
           <ul>
-            <li><strong>Settings Menu:</strong> Access Units Mode, Construction Type, and Paper Setup by clicking <strong>⚙️ Settings</strong> in the top sidebar header.</li>
-            <li><strong>Units Mode:</strong> Switch seamlessly between <em>Inches (in)</em> and <em>Millimeters (mm)</em>.</li>
-            <li><strong>Paper Setup:</strong> Standard paper sizes (US Letter, Legal, Tabloid, ISO A4, A3, A2) in Portrait or Landscape.</li>
-            <li><strong>Grid Size:</strong> Adjust the slider to increase or decrease grid spacing dynamically.</li>
+            <li><strong>Server Templates (.gls):</strong> Select any pre-made pattern directly from the dropdown list. The application automatically fetches and loads the design onto your canvas as soon as a template is selected.</li>
+            <li><strong>Save Project 💾:</strong> Downloads your current draft as a custom project file (<code>.gls</code>). Preserves line types, construction choices, paper dimensions, and precise shape coordinates.</li>
+            <li><strong>Load Local File 📂:</strong> Upload any previously saved <code>.gls</code> project file from your computer to resume drafting.</li>
+            <li><strong>Export PDF 📄:</strong> Generates a full 1:1 true-scale printable template with selected cut gap stroke widths.</li>
           </ul>
         </div>
 
         <div class="guide-section">
-          <h4>💾 Saving & PDF Export</h4>
+          <h4>📄 Paper & Project Setup</h4>
           <ul>
-            <li><strong>Save Project 💾:</strong> Downloads your current draft as a reusable project file (.gls). Saves selected construction type.</li>
-            <li><strong>Load Project 📂:</strong> Upload any saved <code>.gls</code> project file to resume drafting.</li>
-            <li><strong>Export PDF 📄:</strong> Generates a full 1:1 true-scale printable template with the active stroke width for cutting glass patterns directly.</li>
+            <li><strong>Settings Menu:</strong> Access Units Mode, Construction Type, and Paper Setup by clicking <strong>⚙️ Settings</strong> in the top sidebar header.</li>
+            <li><strong>Construction Type:</strong> Toggle between <em>Lead Came (6px / 1/16" gap)</em> and <em>Copper Foil (4px / ~1/24" gap)</em> to accurately calculate pattern gaps for your glass build.</li>
+            <li><strong>Units Mode:</strong> Switch seamlessly between <em>Inches (in)</em> and <em>Millimeters (mm)</em>.</li>
+            <li><strong>Paper Setup:</strong> Choose standard paper sizes (US Letter, Legal, Tabloid, ISO A4, A3, A2) in Portrait or Landscape orientation.</li>
+            <li><strong>Grid Size:</strong> Adjust the slider to dynamically change background grid spacing.</li>
           </ul>
         </div>
 
         <div class="guide-section">
           <h4>⌨️ Keyboard Shortcuts</h4>
           <ul>
+            <li><kbd>Ctrl</kbd> + <kbd>C</kbd> — Copy selected elements</li>
+            <li><kbd>Ctrl</kbd> + <kbd>V</kbd> — Paste duplicated elements</li>
             <li><kbd>Ctrl</kbd> + <kbd>Z</kbd> — Undo last action</li>
             <li><kbd>Ctrl</kbd> + <kbd>Y</kbd> — Redo action</li>
-            <li><kbd>Esc</kbd> — Cancel active drawing line/point buffer (or close open popups)</li>
+            <li><kbd>Delete</kbd> / <kbd>Backspace</kbd> — Delete selected items</li>
+            <li><kbd>Esc</kbd> — Clear selection or cancel active point buffers</li>
             <li><kbd>Spacebar</kbd> (Hold) + Drag — Pan across canvas</li>
           </ul>
         </div>
@@ -421,15 +444,25 @@
 
     let constructionType = 'came'; // 'foil' (4px) or 'came' (6px)
     let activeUnit = 'in';
-    let currentTool = 'line';
+    let currentTool = 'select';
     let gridSizeVal = 0.25;
     let elements = [];
+    let selectedIndices = new Set();
+    let clipboard = [];
     let history = [[]];
     let historyIndex = 0;
 
     let pointsBuffer = [];
     let isDrawingFreehand = false;
     let freehandPoints = [];
+
+    // Selection & Dragging states
+    let isSelecting = false;
+    let selectionBoxStart = null;
+    let selectionBoxEnd = null;
+    let isDraggingSelection = false;
+    let dragStartPos = null;
+    let dragOriginalElements = [];
 
     let mousePos = { x: 0, y: 0 };
     let activeSnap = null;
@@ -536,6 +569,111 @@
       draw();
     }
 
+    function loadProjectData(data) {
+      if (data.elements) {
+        elements = data.elements;
+        if (data.projectName) document.getElementById('project-name').value = data.projectName;
+        if (data.constructionType) { constructionType = data.constructionType; document.getElementById('construction-select').value = constructionType; }
+        if (data.unit) { activeUnit = data.unit; document.getElementById('unit-select').value = activeUnit; }
+        if (data.paper) { activePaperKey = data.paper; document.getElementById('paper-select').value = activePaperKey; }
+        if (data.orientation) { activeOrientation = data.orientation; document.getElementById('paper-orient').value = activeOrientation; }
+      } else if (Array.isArray(data)) {
+        elements = data;
+      }
+      selectedIndices.clear();
+      updateUnitControls();
+      updateCanvasSize();
+      recordState();
+    }
+
+    function generateFallbackTemplate(key) {
+      const cx = canvas.width / 2;
+      const cy = canvas.height / 2;
+
+      if (key === 'sunburst') {
+        const els = [
+          { type: 'rect', p1: { x: cx - 250, y: cy - 350 }, p2: { x: cx + 250, y: cy + 350 } },
+          { type: 'circle', center: { x: cx, y: cy + 150 }, r: 120 }
+        ];
+        const numRays = 8;
+        for (let i = 0; i <= numRays; i++) {
+          const angle = Math.PI + (i * Math.PI / numRays);
+          els.push({
+            type: 'line',
+            p1: { x: cx + 120 * Math.cos(angle), y: (cy + 150) + 120 * Math.sin(angle) },
+            p2: { x: cx + 320 * Math.cos(angle), y: (cy + 150) + 320 * Math.sin(angle) }
+          });
+        }
+        return { projectName: 'Sunburst-Accent-Panel', elements: els };
+      } else if (key === 'border') {
+        const margin = 48;
+        const inner = 96;
+        return {
+          projectName: 'Geometric-Panel-Border',
+          elements: [
+            { type: 'rect', p1: { x: margin, y: margin }, p2: { x: canvas.width - margin, y: canvas.height - margin } },
+            { type: 'rect', p1: { x: inner, y: inner }, p2: { x: canvas.width - inner, y: canvas.height - inner } },
+            { type: 'line', p1: { x: margin, y: margin }, p2: { x: inner, y: inner } },
+            { type: 'line', p1: { x: canvas.width - margin, y: margin }, p2: { x: canvas.width - inner, y: inner } },
+            { type: 'line', p1: { x: canvas.width - margin, y: canvas.height - margin }, p2: { x: canvas.width - inner, y: canvas.height - inner } },
+            { type: 'line', p1: { x: margin, y: canvas.height - margin }, p2: { x: inner, y: canvas.height - inner } }
+          ]
+        };
+      } else if (key === 'diamond') {
+        const els = [
+          { type: 'rect', p1: { x: cx - 200, y: cy - 300 }, p2: { x: cx + 200, y: cy + 300 } }
+        ];
+        const step = 80;
+        for (let offset = -240; offset <= 240; offset += step) {
+          els.push({ type: 'line', p1: { x: cx - 200, y: cy + offset }, p2: { x: cx + 200, y: cy + offset + 200 } });
+          els.push({ type: 'line', p1: { x: cx - 200, y: cy + offset }, p2: { x: cx + 200, y: cy + offset - 200 } });
+        }
+        return { projectName: 'Classic-Diamond-Lattice', elements: els };
+      }
+      return { projectName: 'Template', elements: [] };
+    }
+
+    async function loadTemplateList() {
+      const templateSelect = document.getElementById('templateSelect');
+      if (!templateSelect) return;
+
+      try {
+        // Fetch template directory listing with cache buster
+        const response = await fetch(`/templates/?_=${Date.now()}`);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+        const items = await response.json();
+
+        // Flexible filter for .gls files
+        const glsFiles = items.filter(item => 
+          item.name && item.name.toLowerCase().endsWith('.gls')
+        );
+
+        templateSelect.innerHTML = '<option value="" disabled selected>-- Select Template --</option>';
+
+        if (glsFiles.length === 0) {
+          const option = document.createElement('option');
+          option.disabled = true;
+          option.textContent = 'No .gls templates found';
+          templateSelect.appendChild(option);
+          return;
+        }
+
+        // Add each template file as an option
+        glsFiles.forEach(file => {
+          const option = document.createElement('option');
+          option.value = file.name;
+          // Displays human-readable name (e.g. "frame_long" instead of "frame_long.gls")
+          option.textContent = file.name.replace(/\.gls$/i, ''); 
+          templateSelect.appendChild(option);
+        });
+
+      } catch (err) {
+        console.error('Failed to load template directory:', err);
+        templateSelect.innerHTML = '<option value="" disabled selected>Error loading templates</option>';
+      }
+    }
+
     function recordState() {
       history = history.slice(0, historyIndex + 1);
       history.push(JSON.parse(JSON.stringify(elements)));
@@ -546,6 +684,7 @@
       if (historyIndex > 0) {
         historyIndex--;
         elements = JSON.parse(JSON.stringify(history[historyIndex]));
+        selectedIndices.clear();
         pointsBuffer = [];
         freehandPoints = [];
         isDrawingFreehand = false;
@@ -557,6 +696,7 @@
       if (historyIndex < history.length - 1) {
         historyIndex++;
         elements = JSON.parse(JSON.stringify(history[historyIndex]));
+        selectedIndices.clear();
         pointsBuffer = [];
         freehandPoints = [];
         isDrawingFreehand = false;
@@ -624,6 +764,14 @@
       const pts = [];
       if (el.type === 'line') {
         return [ { ...el.p1, t: 0 }, { ...el.p2, t: 1 } ];
+      } else if (el.type === 'rect') {
+        return [
+          { x: el.p1.x, y: el.p1.y, t: 0 },
+          { x: el.p2.x, y: el.p1.y, t: 0.25 },
+          { x: el.p2.x, y: el.p2.y, t: 0.5 },
+          { x: el.p1.x, y: el.p2.y, t: 0.75 },
+          { x: el.p1.x, y: el.p1.y, t: 1 }
+        ];
       } else if (el.type === 'freedraw') {
         return el.points.map((p, idx) => ({ ...p, t: idx / Math.max(1, el.points.length - 1) }));
       } else if (el.type === 'circle') {
@@ -833,6 +981,7 @@
         elements.splice(targetIdx, 1, ...splitSegments);
       }
 
+      selectedIndices.clear();
       recordState();
       draw();
     }
@@ -856,6 +1005,110 @@
       return targetIdx;
     }
 
+    function isElementInBox(el, b1, b2) {
+      const minX = Math.min(b1.x, b2.x);
+      const maxX = Math.max(b1.x, b2.x);
+      const minY = Math.min(b1.y, b2.y);
+      const maxY = Math.max(b1.y, b2.y);
+
+      const pts = sampleElement(el, 30);
+      return pts.some(p => p.x >= minX && p.x <= maxX && p.y >= minY && p.y <= maxY);
+    }
+
+    function moveElement(el, dx, dy) {
+      const copy = JSON.parse(JSON.stringify(el));
+      if (copy.p1) { copy.p1.x += dx; copy.p1.y += dy; }
+      if (copy.p2) { copy.p2.x += dx; copy.p2.y += dy; }
+      if (copy.ctrl) { copy.ctrl.x += dx; copy.ctrl.y += dy; }
+      if (copy.cp1) { copy.cp1.x += dx; copy.cp1.y += dy; }
+      if (copy.cp2) { copy.cp2.x += dx; copy.cp2.y += dy; }
+      if (copy.center) { copy.center.x += dx; copy.center.y += dy; }
+      if (copy.points) {
+        copy.points.forEach(pt => { pt.x += dx; pt.y += dy; });
+      }
+      return copy;
+    }
+
+    function mirrorSelected(direction = 'horizontal') {
+      if (selectedIndices.size === 0) return;
+
+      let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+
+      selectedIndices.forEach(idx => {
+        const pts = sampleElement(elements[idx], 40);
+        pts.forEach(p => {
+          if (p.x < minX) minX = p.x;
+          if (p.x > maxX) maxX = p.x;
+          if (p.y < minY) minY = p.y;
+          if (p.y > maxY) maxY = p.y;
+        });
+      });
+
+      const centerX = (minX + maxX) / 2;
+      const centerY = (minY + maxY) / 2;
+
+      selectedIndices.forEach(idx => {
+        const el = elements[idx];
+
+        const mirrorPoint = (pt) => {
+          if (!pt) return;
+          if (direction === 'horizontal') pt.x = 2 * centerX - pt.x;
+          else pt.y = 2 * centerY - pt.y;
+        };
+
+        if (el.type === 'line' || el.type === 'rect') {
+          mirrorPoint(el.p1);
+          mirrorPoint(el.p2);
+        } else if (el.type === 'circle') {
+          mirrorPoint(el.center);
+          if (el.startAngle !== undefined && el.endAngle !== undefined) {
+            if (direction === 'horizontal') {
+              const newStart = Math.PI - el.endAngle;
+              const newEnd = Math.PI - el.startAngle;
+              el.startAngle = newStart;
+              el.endAngle = newEnd;
+            } else {
+              const newStart = -el.endAngle;
+              const newEnd = -el.startAngle;
+              el.startAngle = newStart;
+              el.endAngle = newEnd;
+            }
+          }
+        } else if (el.type === 'arc') {
+          mirrorPoint(el.p1);
+          mirrorPoint(el.p2);
+          mirrorPoint(el.ctrl);
+        } else if (el.type === 'ogee') {
+          mirrorPoint(el.p1);
+          mirrorPoint(el.p2);
+          if (el.cp1) mirrorPoint(el.cp1);
+          if (el.cp2) mirrorPoint(el.cp2);
+        } else if (el.type === 'freedraw') {
+          el.points.forEach(p => mirrorPoint(p));
+        }
+      });
+
+      recordState();
+      draw();
+    }
+
+    function copySelected() {
+      clipboard = Array.from(selectedIndices).map(i => JSON.parse(JSON.stringify(elements[i])));
+    }
+
+    function pasteSelected() {
+      if (clipboard.length === 0) return;
+      const offset = unitToPx(gridSizeVal) || 20;
+      selectedIndices.clear();
+      clipboard.forEach(el => {
+        const pasted = moveElement(el, offset, offset);
+        elements.push(pasted);
+        selectedIndices.add(elements.length - 1);
+      });
+      recordState();
+      draw();
+    }
+
     function perpPoint(p, a, b) {
       const l2 = (b.x - a.x)**2 + (b.y - a.y)**2;
       if (l2 === 0) return a;
@@ -872,7 +1125,9 @@
       let minDist = threshold;
       let snapType = 'None';
 
-      elements.forEach(el => {
+      elements.forEach((el, idx) => {
+        if (isDraggingSelection && selectedIndices.has(idx)) return;
+
         let targets = [];
         if (snaps.end) {
           if (el.type === 'line' || el.type === 'rect') targets.push({ pt: el.p1, type: 'Endpoint' }, { pt: el.p2, type: 'Endpoint' });
@@ -939,12 +1194,19 @@
       targetCtx.strokeRect(0, 0, canvas.width, canvas.height);
     }
 
-    function renderElement(el, isPreview = false, isHighlighted = false, targetCtx = ctx, overrideColor = null) {
+    function renderElement(el, isPreview = false, isHighlighted = false, targetCtx = ctx, overrideColor = null, isSelected = false) {
       targetCtx.save();
-      targetCtx.strokeStyle = overrideColor ? overrideColor : (isHighlighted ? '#ff4d4d' : (isPreview ? '#007acc' : '#ffffff'));
+      
+      let strokeColor = '#ffffff';
+      if (overrideColor) strokeColor = overrideColor;
+      else if (isSelected) strokeColor = '#00e5ff';
+      else if (isHighlighted) strokeColor = '#ff4d4d';
+      else if (isPreview) strokeColor = '#007acc';
+
+      targetCtx.strokeStyle = strokeColor;
       
       const standardWidth = (constructionType === 'foil') ? 4 : 6;
-      const baseWidth = isHighlighted ? (standardWidth + 2) : (isPreview ? 2 : standardWidth);
+      const baseWidth = (isHighlighted || isSelected) ? (standardWidth + 2) : (isPreview ? 2 : standardWidth);
       targetCtx.lineWidth = baseWidth / scale;
       
       targetCtx.lineCap = 'round';
@@ -1036,8 +1298,24 @@
 
       elements.forEach((el, idx) => {
         const isHovered = (currentTool === 'erase' && idx === hoveredElementIdx);
-        renderElement(el, false, isHovered);
+        const isSel = selectedIndices.has(idx);
+        renderElement(el, false, isHovered, ctx, null, isSel);
       });
+
+      if (isSelecting && selectionBoxStart && selectionBoxEnd) {
+        ctx.save();
+        ctx.strokeStyle = '#00e5ff';
+        ctx.fillStyle = 'rgba(0, 229, 255, 0.12)';
+        ctx.lineWidth = 1 / scale;
+        ctx.setLineDash([4 / scale, 4 / scale]);
+        const bx = selectionBoxStart.x;
+        const by = selectionBoxStart.y;
+        const bw = selectionBoxEnd.x - selectionBoxStart.x;
+        const bh = selectionBoxEnd.y - selectionBoxStart.y;
+        ctx.fillRect(bx, by, bw, bh);
+        ctx.strokeRect(bx, by, bw, bh);
+        ctx.restore();
+      }
 
       const currentSnapPt = calculateSnap(mousePos);
 
@@ -1109,6 +1387,34 @@
 
       const p = calculateSnap(mousePos);
 
+      if (currentTool === 'select') {
+        const hitIdx = findHoveredElement(mousePos);
+        if (hitIdx !== -1 && selectedIndices.has(hitIdx)) {
+          isDraggingSelection = true;
+          dragStartPos = { ...p };
+          dragOriginalElements = Array.from(selectedIndices).map(idx => ({
+            idx,
+            el: JSON.parse(JSON.stringify(elements[idx]))
+          }));
+        } else if (hitIdx !== -1 && !e.shiftKey) {
+          selectedIndices.clear();
+          selectedIndices.add(hitIdx);
+          isDraggingSelection = true;
+          dragStartPos = { ...p };
+          dragOriginalElements = [{
+            idx: hitIdx,
+            el: JSON.parse(JSON.stringify(elements[hitIdx]))
+          }];
+        } else {
+          if (!e.shiftKey) selectedIndices.clear();
+          isSelecting = true;
+          selectionBoxStart = { ...mousePos };
+          selectionBoxEnd = { ...mousePos };
+        }
+        draw();
+        return;
+      }
+
       if (currentTool === 'freedraw') {
         isDrawingFreehand = true;
         freehandPoints = [{ x: p.x, y: p.y }];
@@ -1120,6 +1426,7 @@
         const targetIdx = findHoveredElement(mousePos);
         if (targetIdx !== -1) {
           elements.splice(targetIdx, 1);
+          selectedIndices.clear();
           hoveredElementIdx = -1;
           recordState();
           draw();
@@ -1167,6 +1474,32 @@
 
       mousePos = screenToWorld(e.clientX, e.clientY);
 
+      if (isDraggingSelection) {
+        const currentSnapPt = calculateSnap(mousePos);
+        const dx = currentSnapPt.x - dragStartPos.x;
+        const dy = currentSnapPt.y - dragStartPos.y;
+
+        dragOriginalElements.forEach(item => {
+          elements[item.idx] = moveElement(item.el, dx, dy);
+        });
+
+        draw();
+        updateStatusBar();
+        return;
+      }
+
+      if (isSelecting) {
+        selectionBoxEnd = { ...mousePos };
+        elements.forEach((el, idx) => {
+          if (isElementInBox(el, selectionBoxStart, selectionBoxEnd)) {
+            selectedIndices.add(idx);
+          }
+        });
+        draw();
+        updateStatusBar();
+        return;
+      }
+
       if (isDrawingFreehand) {
         const lastPt = freehandPoints[freehandPoints.length - 1];
         if (!lastPt || dist(lastPt, mousePos) > (2 / scale)) {
@@ -1190,7 +1523,20 @@
     window.addEventListener('mouseup', (e) => {
       if (isPanning) {
         isPanning = false;
-        canvas.style.cursor = isSpacePressed ? 'grab' : 'crosshair';
+        canvas.style.cursor = isSpacePressed ? 'grab' : (currentTool === 'select' ? 'default' : 'crosshair');
+      }
+
+      if (isDraggingSelection) {
+        isDraggingSelection = false;
+        dragStartPos = null;
+        dragOriginalElements = [];
+        recordState();
+      }
+
+      if (isSelecting) {
+        isSelecting = false;
+        selectionBoxStart = null;
+        selectionBoxEnd = null;
       }
 
       if (isDrawingFreehand) {
@@ -1211,8 +1557,9 @@
       const paperName = PAPER_SIZES[activePaperKey].name;
       const zoomPct = Math.round(scale * 100);
       const modeLabel = constructionType === 'foil' ? 'Foil (4px)' : 'Came (6px)';
+      const selCount = selectedIndices.size;
 
-      statusBar.innerText = `Type: ${modeLabel} | Paper: ${paperName} (${activeOrientation}) | Tool: ${currentTool.toUpperCase()} | X: ${posX} Y: ${posY} | Zoom: ${zoomPct}% | Snap: ${activeSnap}`;
+      statusBar.innerText = `Type: ${modeLabel} | Paper: ${paperName} (${activeOrientation}) | Tool: ${currentTool.toUpperCase()} | Sel: ${selCount} | X: ${posX} Y: ${posY} | Zoom: ${zoomPct}% | Snap: ${activeSnap}`;
     }
 
     document.getElementById('construction-select').addEventListener('change', (e) => {
@@ -1241,6 +1588,7 @@
         document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         currentTool = btn.dataset.tool;
+        canvas.style.cursor = (currentTool === 'select') ? 'default' : 'crosshair';
         pointsBuffer = [];
         freehandPoints = [];
         isDrawingFreehand = false;
@@ -1248,6 +1596,12 @@
         draw();
       });
     });
+
+    document.getElementById('btn-mirror-h').addEventListener('click', () => mirrorSelected('horizontal'));
+    document.getElementById('btn-mirror-v').addEventListener('click', () => mirrorSelected('vertical'));
+
+    document.getElementById('btn-copy').addEventListener('click', copySelected);
+    document.getElementById('btn-paste').addEventListener('click', pasteSelected);
 
     ['grid', 'end', 'mid', 'perp', 'center'].forEach(id => {
       document.getElementById(`snap-${id}`).addEventListener('change', (e) => snaps[id] = e.target.checked);
@@ -1259,9 +1613,11 @@
       draw();
     });
 
-    document.getElementById('btn-reset-view').addEventListener('click', resetView);
-    document.getElementById('btn-undo').addEventListener('click', undo);
-    document.getElementById('btn-redo').addEventListener('click', redo);
+    document.getElementById('btn-reset-view')?.addEventListener('click', resetView);
+    document.getElementById('btn-undo')?.addEventListener('click', undo);
+    document.getElementById('btn-redo')?.addEventListener('click', redo);
+
+    document.getElementById('btn-load-template')?.addEventListener('click', loadTemplateFromServer);
 
     window.addEventListener('keydown', (e) => {
       if (e.code === 'Space' && !e.repeat && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
@@ -1278,12 +1634,11 @@
           closeHelp();
           return;
         }
-        if (pointsBuffer.length > 0 || isDrawingFreehand) {
-          pointsBuffer = [];
-          freehandPoints = [];
-          isDrawingFreehand = false;
-          draw();
-        }
+        selectedIndices.clear();
+        pointsBuffer = [];
+        freehandPoints = [];
+        isDrawingFreehand = false;
+        draw();
         return;
       }
 
@@ -1294,7 +1649,15 @@
       const isCmdOrCtrl = e.ctrlKey || e.metaKey;
       const key = e.key.toLowerCase();
 
-      if (isCmdOrCtrl && key === 'z' && !e.shiftKey) {
+      if (isCmdOrCtrl && key === 'c') {
+        e.preventDefault();
+        copySelected();
+      }
+      else if (isCmdOrCtrl && key === 'v') {
+        e.preventDefault();
+        pasteSelected();
+      }
+      else if (isCmdOrCtrl && key === 'z' && !e.shiftKey) {
         e.preventDefault();
         undo();
       }
@@ -1302,18 +1665,29 @@
         e.preventDefault();
         redo();
       }
+      else if (key === 'delete' || key === 'backspace') {
+        if (selectedIndices.size > 0) {
+          e.preventDefault();
+          const sorted = Array.from(selectedIndices).sort((a, b) => b - a);
+          sorted.forEach(idx => elements.splice(idx, 1));
+          selectedIndices.clear();
+          recordState();
+          draw();
+        }
+      }
     });
 
     window.addEventListener('keyup', (e) => {
       if (e.code === 'Space') {
         isSpacePressed = false;
-        if (!isPanning) canvas.style.cursor = 'crosshair';
+        if (!isPanning) canvas.style.cursor = (currentTool === 'select') ? 'default' : 'crosshair';
       }
     });
 
     document.getElementById('btn-clear').addEventListener('click', () => {
       if (confirm("Clear canvas?")) {
         elements = [];
+        selectedIndices.clear();
         recordState();
         draw();
       }
@@ -1342,19 +1716,7 @@
       reader.onload = (evt) => {
         try {
           const data = JSON.parse(evt.target.result);
-          if (data.elements) {
-            elements = data.elements;
-            if (data.projectName) document.getElementById('project-name').value = data.projectName;
-            if (data.constructionType) { constructionType = data.constructionType; document.getElementById('construction-select').value = constructionType; }
-            if (data.unit) { activeUnit = data.unit; document.getElementById('unit-select').value = activeUnit; }
-            if (data.paper) { activePaperKey = data.paper; document.getElementById('paper-select').value = activePaperKey; }
-            if (data.orientation) { activeOrientation = data.orientation; document.getElementById('paper-orient').value = activeOrientation; }
-          } else {
-            elements = data;
-          }
-          updateUnitControls();
-          updateCanvasSize();
-          recordState();
+          loadProjectData(data);
         } catch (err) {
           alert("Invalid .gls file format.");
         }
@@ -1406,6 +1768,37 @@
 
     updateUnitControls();
     updateCanvasSize();
+
+    // ==========================================
+    // TEMPLATE DROPDOWN SELECTION HANDLER
+    // ==========================================
+    const templateSelect = document.getElementById('templateSelect');
+    
+    templateSelect?.addEventListener('change', async (e) => {
+        const filename = e.target.value;
+        if (!filename) return;
+
+        try {
+            const response = await fetch(`/templates/${filename}`);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            
+            const templateData = await response.json();
+            
+            // Calls your existing file loading function
+            if (typeof loadProjectData === 'function') {
+                loadProjectData(templateData);
+            } else if (typeof loadPattern === 'function') {
+                loadPattern(templateData);
+            }
+        } catch (err) {
+            console.error('Error fetching template pattern file:', err);
+            alert('Failed to load selected template.');
+        }
+    });
+
+    // Run the template populator right at the end of script execution
+    loadTemplateList();
+
   </script>
 </body>
 </html>
