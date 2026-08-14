@@ -1,0 +1,24 @@
+server {
+    listen 80;
+    listen [::]:80;
+    
+    #Change for your URL or IP address
+    server_name glass.local;
+
+    root /var/www/glass/html;
+    index index.html index.htm;
+
+    # Exact match for the templates route
+    location /templates/ {
+        alias /var/www/glass/html/templates/;
+        autoindex on;
+        autoindex_format json;
+        expires -1;
+        add_header Cache-Control "no-store, no-cache, must-revalidate, max-age=0";
+    }
+
+    # Standard fallback for the main site
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}
