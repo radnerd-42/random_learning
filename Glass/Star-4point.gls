@@ -1,0 +1,19 @@
+{
+  "projectName": "Geometric Diamond Star",
+  "constructionType": "came",
+  "unit": "in",
+  "paper": "letter",
+  "orientation": "portrait",
+  "elements": [
+    { "type": "line", "p1": { "x": 408, "y": 96 }, "p2": { "x": 720, "y": 408 } },
+    { "type": "line", "p1": { "x": 720, "y": 408 }, "p2": { "x": 408, "y": 720 } },
+    { "type": "line", "p1": { "x": 408, "y": 720 }, "p2": { "x": 96, "y": 408 } },
+    { "type": "line", "p1": { "x": 96, "y": 408 }, "p2": { "x": 408, "y": 96 } },
+    { "type": "line", "p1": { "x": 408, "y": 96 }, "p2": { "x": 408, "y": 720 } },
+    { "type": "line", "p1": { "x": 96, "y": 408 }, "p2": { "x": 720, "y": 408 } },
+    { "type": "line", "p1": { "x": 408, "y": 252 }, "p2": { "x": 564, "y": 408 } },
+    { "type": "line", "p1": { "x": 564, "y": 408 }, "p2": { "x": 408, "y": 564 } },
+    { "type": "line", "p1": { "x": 408, "y": 564 }, "p2": { "x": 252, "y": 408 } },
+    { "type": "line", "p1": { "x": 252, "y": 408 }, "p2": { "x": 408, "y": 252 } }
+  ]
+}
