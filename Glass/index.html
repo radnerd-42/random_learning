@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <meta name="version" content="7.0.0">
   <title>Leaded Glass Design</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -207,7 +207,7 @@
 
     <div class="section">
       <label for="project-name">Project Name</label>
-      <input type="text" id="project-name" value="Leaded-Glass-Pattern" placeholder="Enter project name..." />
+      <input type="text" id="project-name" value="Leaded-Glass-Pattern" placeholder="Enter project name..." maxlength="50" />
     </div>
 
     <!-- Group 1: Drawing Tools -->
@@ -428,6 +428,7 @@
   <script>
     const DPI = 96;
     const MM_PER_INCH = 25.4;
+    const MAX_HISTORY = 30; // Hardened against memory exhaustion
 
     const PAPER_SIZES = {
       letter:  { name: 'Letter',  inW: 8.5,  inH: 11   },
@@ -506,10 +507,33 @@
       if (e.target === settingsModal) closeSettings();
     });
 
+    // Sanitization & Input Validation
     function getSanitizedProjectName() {
       const nameInput = document.getElementById('project-name').value.trim();
-      const sanitized = nameInput.replace(/[/\\?%*:|"<>]/g, '-').replace(/\s+/g, '-');
+      const sanitized = nameInput.replace(/[^a-zA-Z0-9_\-]/g, '-').replace(/-+/g, '-');
       return sanitized || 'Leaded-Glass-Pattern';
+    }
+
+    function isFinitePoint(pt) {
+      return pt && typeof pt.x === 'number' && Number.isFinite(pt.x) &&
+                 typeof pt.y === 'number' && Number.isFinite(pt.y);
+    }
+
+    function validateProjectData(data) {
+      if (!data || typeof data !== 'object') return false;
+      const targetEls = data.elements || (Array.isArray(data) ? data : null);
+      if (!Array.isArray(targetEls)) return false;
+
+      const validTypes = ['line', 'rect', 'circle', 'arc', 'ogee', 'freedraw'];
+      return targetEls.every(el => {
+        if (!el || typeof el !== 'object' || !validTypes.includes(el.type)) return false;
+        if (['line', 'rect', 'arc', 'ogee'].includes(el.type)) {
+          if (!isFinitePoint(el.p1) || !isFinitePoint(el.p2)) return false;
+        }
+        if (el.type === 'circle' && (!isFinitePoint(el.center) || typeof el.r !== 'number' || !Number.isFinite(el.r))) return false;
+        if (el.type === 'freedraw' && (!Array.isArray(el.points) || !el.points.every(isFinitePoint))) return false;
+        return true;
+      });
     }
 
     function pxToUnit(px) {
@@ -527,7 +551,7 @@
     }
 
     function getPaperDimensions() {
-      const base = PAPER_SIZES[activePaperKey];
+      const base = PAPER_SIZES[activePaperKey] || PAPER_SIZES.letter;
       const inW = activeOrientation === 'landscape' ? base.inH : base.inW;
       const inH = activeOrientation === 'landscape' ? base.inW : base.inH;
       return { pxW: inW * DPI, pxH: inH * DPI, inW, inH };
@@ -570,67 +594,40 @@
     }
 
     function loadProjectData(data) {
+      if (!validateProjectData(data)) {
+        alert("Invalid project file structure or corrupt coordinate values.");
+        return;
+      }
+
       if (data.elements) {
         elements = data.elements;
-        if (data.projectName) document.getElementById('project-name').value = data.projectName;
-        if (data.constructionType) { constructionType = data.constructionType; document.getElementById('construction-select').value = constructionType; }
-        if (data.unit) { activeUnit = data.unit; document.getElementById('unit-select').value = activeUnit; }
-        if (data.paper) { activePaperKey = data.paper; document.getElementById('paper-select').value = activePaperKey; }
-        if (data.orientation) { activeOrientation = data.orientation; document.getElementById('paper-orient').value = activeOrientation; }
+        if (typeof data.projectName === 'string') {
+          document.getElementById('project-name').value = data.projectName.replace(/[^a-zA-Z0-9_\- ]/g, '');
+        }
+        if (['foil', 'came'].includes(data.constructionType)) { 
+          constructionType = data.constructionType; 
+          document.getElementById('construction-select').value = constructionType; 
+        }
+        if (['in', 'mm'].includes(data.unit)) { 
+          activeUnit = data.unit; 
+          document.getElementById('unit-select').value = activeUnit; 
+        }
+        if (PAPER_SIZES[data.paper]) { 
+          activePaperKey = data.paper; 
+          document.getElementById('paper-select').value = activePaperKey; 
+        }
+        if (['portrait', 'landscape'].includes(data.orientation)) { 
+          activeOrientation = data.orientation; 
+          document.getElementById('paper-orient').value = activeOrientation; 
+        }
       } else if (Array.isArray(data)) {
         elements = data;
       }
+
       selectedIndices.clear();
       updateUnitControls();
       updateCanvasSize();
       recordState();
-    }
-
-    function generateFallbackTemplate(key) {
-      const cx = canvas.width / 2;
-      const cy = canvas.height / 2;
-
-      if (key === 'sunburst') {
-        const els = [
-          { type: 'rect', p1: { x: cx - 250, y: cy - 350 }, p2: { x: cx + 250, y: cy + 350 } },
-          { type: 'circle', center: { x: cx, y: cy + 150 }, r: 120 }
-        ];
-        const numRays = 8;
-        for (let i = 0; i <= numRays; i++) {
-          const angle = Math.PI + (i * Math.PI / numRays);
-          els.push({
-            type: 'line',
-            p1: { x: cx + 120 * Math.cos(angle), y: (cy + 150) + 120 * Math.sin(angle) },
-            p2: { x: cx + 320 * Math.cos(angle), y: (cy + 150) + 320 * Math.sin(angle) }
-          });
-        }
-        return { projectName: 'Sunburst-Accent-Panel', elements: els };
-      } else if (key === 'border') {
-        const margin = 48;
-        const inner = 96;
-        return {
-          projectName: 'Geometric-Panel-Border',
-          elements: [
-            { type: 'rect', p1: { x: margin, y: margin }, p2: { x: canvas.width - margin, y: canvas.height - margin } },
-            { type: 'rect', p1: { x: inner, y: inner }, p2: { x: canvas.width - inner, y: canvas.height - inner } },
-            { type: 'line', p1: { x: margin, y: margin }, p2: { x: inner, y: inner } },
-            { type: 'line', p1: { x: canvas.width - margin, y: margin }, p2: { x: canvas.width - inner, y: inner } },
-            { type: 'line', p1: { x: canvas.width - margin, y: canvas.height - margin }, p2: { x: canvas.width - inner, y: canvas.height - inner } },
-            { type: 'line', p1: { x: margin, y: canvas.height - margin }, p2: { x: inner, y: canvas.height - inner } }
-          ]
-        };
-      } else if (key === 'diamond') {
-        const els = [
-          { type: 'rect', p1: { x: cx - 200, y: cy - 300 }, p2: { x: cx + 200, y: cy + 300 } }
-        ];
-        const step = 80;
-        for (let offset = -240; offset <= 240; offset += step) {
-          els.push({ type: 'line', p1: { x: cx - 200, y: cy + offset }, p2: { x: cx + 200, y: cy + offset + 200 } });
-          els.push({ type: 'line', p1: { x: cx - 200, y: cy + offset }, p2: { x: cx + 200, y: cy + offset - 200 } });
-        }
-        return { projectName: 'Classic-Diamond-Lattice', elements: els };
-      }
-      return { projectName: 'Template', elements: [] };
     }
 
     async function loadTemplateList() {
@@ -638,15 +635,14 @@
       if (!templateSelect) return;
 
       try {
-        // Fetch template directory listing with cache buster
         const response = await fetch(`/templates/?_=${Date.now()}`);
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
         const items = await response.json();
+        if (!Array.isArray(items)) throw new Error("Invalid directory response");
 
-        // Flexible filter for .gls files
         const glsFiles = items.filter(item => 
-          item.name && item.name.toLowerCase().endsWith('.gls')
+          item && typeof item.name === 'string' && item.name.toLowerCase().endsWith('.gls')
         );
 
         templateSelect.innerHTML = '<option value="" disabled selected>-- Select Template --</option>';
@@ -659,11 +655,9 @@
           return;
         }
 
-        // Add each template file as an option
         glsFiles.forEach(file => {
           const option = document.createElement('option');
           option.value = file.name;
-          // Displays human-readable name (e.g. "frame_long" instead of "frame_long.gls")
           option.textContent = file.name.replace(/\.gls$/i, ''); 
           templateSelect.appendChild(option);
         });
@@ -677,7 +671,12 @@
     function recordState() {
       history = history.slice(0, historyIndex + 1);
       history.push(JSON.parse(JSON.stringify(elements)));
-      historyIndex++;
+      
+      if (history.length > MAX_HISTORY) {
+        history.shift();
+      } else {
+        historyIndex++;
+      }
     }
 
     function undo() {
@@ -1554,7 +1553,7 @@
       const snapped = calculateSnap(mousePos);
       const posX = formatUnit(pxToUnit(snapped.x));
       const posY = formatUnit(pxToUnit(snapped.y));
-      const paperName = PAPER_SIZES[activePaperKey].name;
+      const paperName = (PAPER_SIZES[activePaperKey] || PAPER_SIZES.letter).name;
       const zoomPct = Math.round(scale * 100);
       const modeLabel = constructionType === 'foil' ? 'Foil (4px)' : 'Came (6px)';
       const selCount = selectedIndices.size;
@@ -1616,8 +1615,6 @@
     document.getElementById('btn-reset-view')?.addEventListener('click', resetView);
     document.getElementById('btn-undo')?.addEventListener('click', undo);
     document.getElementById('btn-redo')?.addEventListener('click', redo);
-
-    document.getElementById('btn-load-template')?.addEventListener('click', loadTemplateFromServer);
 
     window.addEventListener('keydown', (e) => {
       if (e.code === 'Space' && !e.repeat && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
@@ -1701,6 +1698,7 @@
       a.href = URL.createObjectURL(blob);
       a.download = `${projectName}.gls`;
       a.click();
+      URL.revokeObjectURL(a.href);
     });
 
     document.getElementById('btn-load').addEventListener('click', () => document.getElementById('file-input').click());
@@ -1709,7 +1707,7 @@
       const file = e.target.files[0];
       if (!file) return;
 
-      const fileNameWithoutExt = file.name.replace(/\.(gls|glass|json)$/i, '');
+      const fileNameWithoutExt = file.name.replace(/\.(gls|glass|json)$/i, '').replace(/[^a-zA-Z0-9_\- ]/g, '');
       document.getElementById('project-name').value = fileNameWithoutExt;
 
       const reader = new FileReader();
@@ -1769,36 +1767,29 @@
     updateUnitControls();
     updateCanvasSize();
 
-    // ==========================================
-    // TEMPLATE DROPDOWN SELECTION HANDLER
-    // ==========================================
+    // Template Dropdown Handler
     const templateSelect = document.getElementById('templateSelect');
     
     templateSelect?.addEventListener('change', async (e) => {
         const filename = e.target.value;
-        if (!filename) return;
+        if (!filename || !/^[a-zA-Z0-9_\-]+\.gls$/i.test(filename)) {
+            alert("Invalid template filename requested.");
+            return;
+        }
 
         try {
-            const response = await fetch(`/templates/${filename}`);
+            const response = await fetch(`/templates/${encodeURIComponent(filename)}`);
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             
             const templateData = await response.json();
-            
-            // Calls your existing file loading function
-            if (typeof loadProjectData === 'function') {
-                loadProjectData(templateData);
-            } else if (typeof loadPattern === 'function') {
-                loadPattern(templateData);
-            }
+            loadProjectData(templateData);
         } catch (err) {
             console.error('Error fetching template pattern file:', err);
             alert('Failed to load selected template.');
         }
     });
 
-    // Run the template populator right at the end of script execution
     loadTemplateList();
-
   </script>
 </body>
 </html>
