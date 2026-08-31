@@ -1,0 +1,84 @@
+{
+  "spdxVersion": "SPDX-2.3",
+  "dataLicense": "CC0-1.0",
+  "SPDXID": "SPDXRef-DOCUMENT",
+  "name": "Stained Glass Vector Design Tool",
+  "documentNamespace": "http://spdx.org/spdxdocs/stained-glass-design-tool-v1.0.0",
+  "creationInfo": {
+    "creators": [
+      "Tool: Manual-SBOM-Builder",
+      "Organization: Local Project"
+    ],
+    "created": "2026-08-31T15:36:00Z"
+  },
+  "packages": [
+    {
+      "name": "Stained Glass Vector Design App",
+      "SPDXID": "SPDXRef-Package-GlassApp",
+      "versionInfo": "1.0.0",
+      "packageFileName": "index.html",
+      "downloadLocation": "NOASSERTION",
+      "filesAnalyzed": false,
+      "licenseConcluded": "NOASSERTION",
+      "licenseDeclared": "NOASSERTION",
+      "copyrightText": "NOASSERTION",
+      "summary": "Client-side HTML5 vector geometry and trimming application for leaded glass patterns.",
+      "supplier": "Organization: In-House Development"
+    },
+    {
+      "name": "HTML5 Canvas API Engine",
+      "SPDXID": "SPDXRef-Package-HTML5Canvas",
+      "versionInfo": "W3C Recommendation",
+      "downloadLocation": "https://www.w3.org/TR/2dcontext/",
+      "filesAnalyzed": false,
+      "licenseConcluded": "W3C-20150513",
+      "licenseDeclared": "W3C-20150513",
+      "copyrightText": "Copyright W3C",
+      "summary": "Native browser 2D rendering engine handling lines, arcs, and vector path rotations."
+    },
+    {
+      "name": "Web Storage API (localStorage)",
+      "SPDXID": "SPDXRef-Package-WebStorage",
+      "versionInfo": "HTML Living Standard",
+      "downloadLocation": "https://html.spec.whatwg.org/multipage/webstorage.html",
+      "filesAnalyzed": false,
+      "licenseConcluded": "CC-BY-4.0",
+      "licenseDeclared": "CC-BY-4.0",
+      "copyrightText": "Copyright WHATWG",
+      "summary": "Browser persistence layer storing geometric state and application settings."
+    },
+    {
+      "name": "Nginx Web Server",
+      "SPDXID": "SPDXRef-Package-Nginx",
+      "versionInfo": "1.24+ (Debian)",
+      "downloadLocation": "https://nginx.org/",
+      "filesAnalyzed": false,
+      "licenseConcluded": "BSD-2-Clause",
+      "licenseDeclared": "BSD-2-Clause",
+      "copyrightText": "Copyright Igor Sysoev",
+      "summary": "Web server hosting static HTML/JS assets within local infrastructure container."
+    }
+  ],
+  "relationships": [
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-GlassApp"
+    },
+    {
+      "spdxElementId": "SPDXRef-Package-GlassApp",
+      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-Package-HTML5Canvas"
+    },
+    {
+      "spdxElementId": "SPDXRef-Package-GlassApp",
+      "relationshipType": "DEPENDS_ON",
+      "relatedSpdxElement": "SPDXRef-Package-WebStorage"
+    },
+    {
+      "spdxElementId": "SPDXRef-Package-GlassApp",
+      "relationshipType": "CONTAINED_BY",
+      "relatedSpdxElement": "SPDXRef-Package-Nginx"
+    }
+  ]
+}
